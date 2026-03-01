@@ -88,7 +88,7 @@ const Home: React.FC = () => {
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 dark:bg-primary/20 rounded-full text-primary font-semibold text-sm mb-6">
               <span className="material-icons-round text-base">info</span>
-              İhtiyacınızı seçin, size en uygun çözümü bulalım
+              İhtiyacınızı seçin, size en uygun çözümü bulalım.
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-slate-900 dark:text-white mb-6 leading-tight">
               Nasıl bir destek
