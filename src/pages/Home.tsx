@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Rocket, Target, Users, BookOpen, ChevronRight, ChevronLeft, Mail, MapPin, Phone } from 'lucide-react';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import ParallaxSection from '../components/ParallaxSection';
 
 const carouselSlides = [
   {
@@ -46,12 +49,14 @@ const Home: React.FC = () => {
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + carouselSlides.length) % carouselSlides.length);
 
   return (
-    <div className="w-full flex flex-col items-center p-6 sm:p-10 xl:p-16 relative transition-colors duration-700">
-      <div className="max-w-7xl w-full flex flex-col gap-20 pb-24 sm:pb-0">
+    <>
+      <Header />
+      <div className="w-full flex flex-col items-center p-6 sm:p-10 xl:p-16 pt-32 sm:pt-40 relative transition-colors duration-700">
+        <div className="max-w-7xl w-full flex flex-col gap-20 pb-24 sm:pb-0">
 
-        {/* --- Hero / Carousel Section --- */}
-        <section className="relative w-full h-[500px] sm:h-[600px] rounded-[3rem] overflow-hidden bg-white/40 dark:bg-white/5 backdrop-blur-2xl border border-white/60 dark:border-white/10 shadow-2xl transition-colors">
-          <AnimatePresence mode="wait">
+          {/* --- Hero / Carousel Section --- */}
+          <section id="features" className="relative w-full h-[500px] sm:h-[600px] rounded-[3rem] overflow-hidden bg-white/40 dark:bg-white/5 backdrop-blur-2xl border border-white/60 dark:border-white/10 shadow-2xl transition-colors">
+            <AnimatePresence mode="wait">
             <motion.div
               key={currentSlide}
               initial={{ opacity: 0, scale: 0.95 }}
@@ -123,14 +128,16 @@ const Home: React.FC = () => {
         </section>
 
         {/* --- About Us Section --- */}
-        <section className="flex flex-col lg:flex-row gap-12 items-center">
-          <div className="flex-1 relative">
-            <div className="absolute inset-0 bg-blue-500/20 rounded-[3rem] blur-[80px]" />
-            <img 
-              src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1000&auto=format&fit=crop" 
-              alt="Students collaborating" 
-              className="relative z-10 rounded-[3rem] object-cover h-[400px] w-full shadow-2xl border border-white/20"
-            />
+        <section id="about" className="flex flex-col lg:flex-row gap-12 items-center">
+          <div className="flex-1 relative w-full">
+            <ParallaxSection speed={0.15}>
+              <div className="absolute inset-0 bg-blue-500/20 rounded-[3rem] blur-[80px]" />
+              <img 
+                src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1000&auto=format&fit=crop" 
+                alt="Students collaborating" 
+                className="relative z-10 rounded-[3rem] object-cover h-[400px] w-full shadow-2xl border border-white/20"
+              />
+            </ParallaxSection>
           </div>
           <div className="flex-1 flex flex-col gap-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 dark:bg-blue-500/20 border border-blue-500/20 text-blue-700 dark:text-blue-400 w-fit text-sm font-bold shadow-sm">
@@ -161,7 +168,7 @@ const Home: React.FC = () => {
         </section>
 
         {/* --- Contact / CTA Section --- */}
-        <section className="bg-gradient-to-br from-indigo-900 to-purple-900 rounded-[3rem] p-10 sm:p-16 relative overflow-hidden shadow-2xl">
+        <section id="contact" className="bg-gradient-to-br from-indigo-900 to-purple-900 rounded-[3rem] p-10 sm:p-16 relative overflow-hidden shadow-2xl">
            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-fuchsia-500/30 rounded-full blur-[120px] pointer-events-none" />
            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/30 rounded-full blur-[100px] pointer-events-none" />
            
@@ -207,8 +214,10 @@ const Home: React.FC = () => {
            </div>
         </section>
 
+        </div>
       </div>
-    </div>
+      <Footer />
+    </>
   );
 };
 
