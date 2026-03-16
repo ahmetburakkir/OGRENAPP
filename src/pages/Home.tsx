@@ -1,180 +1,221 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import FullPageLayout from '../components/FullPageLayout';
+import { Rocket, Target, Users, BookOpen, ChevronRight, ChevronLeft, Mail, MapPin, Phone } from 'lucide-react';
 
-type SupportOption = 'subcontractor' | 'local-agent' | 'technical-expert' | 'partnership' | 'none';
+const carouselSlides = [
+  {
+    id: 1,
+    title: "Geleceğini OGRENAPP ile Şekillendir",
+    subtitle: "Ortaokuldan Üniversiteye Kariyer Koçun",
+    description: "Sadece ders çalışmak değil, potansiyelini keşfetmek için buradayız. Hedeflerini belirle, görevleri tamamla ve XP kazanarak seviye atla.",
+    icon: Rocket,
+    color: "from-indigo-500 to-purple-500"
+  },
+  {
+    id: 2,
+    title: "Sana Özel Gerçek Dünya Simülasyonları",
+    subtitle: "Lise ve Üniversite Hedeflerin İçin",
+    description: "YKS Net simülatörü, Mülakat provaları, Soft Skill takibi ve sektör trendleri ile sadece sınava değil, hayata hazırlan.",
+    icon: Target,
+    color: "from-fuchsia-500 to-rose-500"
+  },
+  {
+    id: 3,
+    title: "Oyunlaştırılmış Eğitim Deneyimi",
+    subtitle: "Eğlenerek Öğren, Serini Koru",
+    description: "Günlük genel kültür testleri, karakter analizleri ve başarı rozetleriyle motivasyonunu her zaman en üstte tut.",
+    icon: BookOpen,
+    color: "from-emerald-500 to-teal-500"
+  }
+];
 
 const Home: React.FC = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
   const navigate = useNavigate();
-  const [selectedOption, setSelectedOption] = useState<SupportOption>('none');
 
-  const options = [
-    {
-      id: 'subcontractor' as SupportOption,
-      icon: 'groups',
-      title: 'Taşeron arıyorum.',
-      description: 'Liman hizmetleri, operasyonel destek ve iş gücü gereksinimleriniz için profesyonel ekiplerle eşleşin.'
-    },
-    {
-      id: 'local-agent' as SupportOption,
-      icon: 'anchor',
-      title: 'Yerel acente arıyorum.',
-      description: 'Belirli bölge veya limanlarda gemi acenteliği ve resmi prosedür yönetimi için uzman desteği alın.'
-    },
-    {
-      id: 'technical-expert' as SupportOption,
-      icon: 'engineering',
-      title: 'Teknik uzman arıyorum.',
-      description: 'Bakım, onarım, sörvey ve teknik denetim hizmetleri için kalifiye uzmanlara ulaşın.'
-    },
-    {
-      id: 'partnership' as SupportOption,
-      icon: 'handshake',
-      title: 'İş ortaklığı arıyorum.',
-      description: 'Uzun vadeli stratejik iş birlikleri ve geniş çaplı denizcilik projeleri için partnerler bulun.'
-    }
-  ];
+  // Auto-advance carousel
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % carouselSlides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
 
-  const handleOptionClick = (optionId: SupportOption) => {
-    setSelectedOption(optionId);
-  };
-
-  const handleContinue = () => {
-    if (selectedOption && selectedOption !== 'none') {
-      const routes: Record<Exclude<SupportOption, 'none'>, string> = {
-        'local-agent': '/local-agent',
-        'subcontractor': '/subcontractor',
-        'technical-expert': '/technical-expert',
-        'partnership': '/partnership'
-      };
-      navigate(routes[selectedOption] || '/');
-    }
-  };
+  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % carouselSlides.length);
+  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + carouselSlides.length) % carouselSlides.length);
 
   return (
-    <FullPageLayout>
-      {/* Header / Navigation */}
-      <header className="w-full py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200/50 dark:border-slate-700/50 shadow-sm flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="bg-primary p-2 rounded-xl shadow-lg shadow-primary/20">
-            <span className="material-icons-round text-white text-2xl">directions_boat</span>
-          </div>
-          <span className="text-2xl font-bold tracking-tight bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-            Portlink
-          </span>
-        </div>
-        <div className="flex items-center gap-4">
-          <button className="p-2 text-slate-500 hover:text-primary transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
-            <span className="material-icons-round">help_outline</span>
-          </button>
-          <div className="h-6 w-px bg-slate-300 dark:bg-slate-700"></div>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800">
-            <span className="text-sm font-medium text-slate-600 dark:text-slate-300">TR</span>
-            <span className="material-icons-round text-sm text-slate-400">keyboard_arrow_down</span>
-          </div>
-          <button
-            onClick={() => navigate('/')}
-            className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary transition-colors"
-          >
-            Çıkış
-          </button>
-        </div>
-      </header>
+    <div className="w-full flex flex-col items-center p-6 sm:p-10 xl:p-16 relative transition-colors duration-700">
+      <div className="max-w-7xl w-full flex flex-col gap-20 pb-24 sm:pb-0">
 
-      {/* Main Content */}
-      <main className="flex-1 w-full flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 overflow-y-auto">
-        <div className="max-w-5xl w-full">
-          {/* Hero Section */}
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 dark:bg-primary/20 rounded-full text-primary font-semibold text-sm mb-6">
-              <span className="material-icons-round text-base">info</span>
-              İhtiyacınızı seçin, size en uygun çözümü bulalım.
-            </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-slate-900 dark:text-white mb-6 leading-tight">
-              Nasıl bir destek
-              <span className="block bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-                arıyorsunuz?
-              </span>
-            </h1>
-            <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
-              İhtiyaçlarınıza en uygun çözüm ortağını bulmanıza yardımcı olalım. Lütfen size uygun olan seçeneği işaretleyin.
-            </p>
-          </div>
-
-          {/* Job Type Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
-            {options.map((option) => (
-              <button
-                key={option.id}
-                onClick={() => handleOptionClick(option.id)}
-                className={`group relative flex flex-col p-8 bg-white dark:bg-slate-800 border-2 rounded-2xl text-left transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10 focus:ring-4 focus:ring-primary/20 ${
-                  selectedOption === option.id
-                    ? 'border-primary shadow-2xl shadow-primary/10 bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10'
-                    : 'border-slate-200 dark:border-slate-700 hover:border-primary/50 bg-white dark:bg-slate-800'
-                }`}
-              >
-                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300 ${
-                  selectedOption === option.id
-                    ? 'bg-primary/20 dark:bg-primary/30 shadow-lg shadow-primary/20'
-                    : 'bg-primary/10 dark:bg-primary/20 group-hover:bg-primary/15'
-                }`}>
-                  <span className="material-icons-round text-4xl text-primary">
-                    {option.icon}
-                  </span>
+        {/* --- Hero / Carousel Section --- */}
+        <section className="relative w-full h-[500px] sm:h-[600px] rounded-[3rem] overflow-hidden bg-white/40 dark:bg-white/5 backdrop-blur-2xl border border-white/60 dark:border-white/10 shadow-2xl transition-colors">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentSlide}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.05 }}
+              transition={{ duration: 0.7, ease: "easeInOut" }}
+              className="absolute inset-0 flex flex-col items-center justify-center p-8 sm:p-16 text-center"
+            >
+              <div className={`absolute inset-0 opacity-20 dark:opacity-10 bg-gradient-to-br ${carouselSlides[currentSlide].color}`} />
+              
+              <div className="relative z-10 flex flex-col items-center max-w-3xl">
+                <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full mb-8 flex items-center justify-center shadow-2xl bg-gradient-to-br ${carouselSlides[currentSlide].color}`}>
+                  {React.createElement(carouselSlides[currentSlide].icon, { className: "w-10 h-10 sm:w-12 sm:h-12 text-white" })}
                 </div>
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">{option.title}</h3>
-                <p className="text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
-                  {option.description}
+                
+                <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black text-slate-900 dark:text-white mb-6 tracking-tight leading-tight">
+                  {carouselSlides[currentSlide].title}
+                </h1>
+                <h2 className="text-xl sm:text-2xl font-bold text-indigo-600 dark:text-indigo-400 mb-6">
+                  {carouselSlides[currentSlide].subtitle}
+                </h2>
+                <p className="text-base sm:text-xl text-slate-700 dark:text-slate-300 font-medium max-w-2xl leading-relaxed">
+                  {carouselSlides[currentSlide].description}
                 </p>
-                <div className={`absolute top-6 right-6 transition-all duration-300 ${
-                  selectedOption === option.id 
-                    ? 'opacity-100 scale-100' 
-                    : 'opacity-0 scale-75 group-hover:opacity-50'
-                }`}>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    selectedOption === option.id 
-                      ? 'bg-primary text-white shadow-lg shadow-primary/30' 
-                      : 'bg-slate-200 dark:bg-slate-700 text-slate-400'
-                  }`}>
-                    <span className="material-icons-round text-lg">
-                      {selectedOption === option.id ? 'check' : 'radio_button_unchecked'}
-                    </span>
-                  </div>
+
+                <div className="mt-10 flex flex-col sm:flex-row gap-4">
+                  <button 
+                    onClick={() => navigate('/login')}
+                    className="px-8 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black text-lg shadow-xl hover:scale-105 transition-all flex items-center justify-center gap-2 group"
+                  >
+                    Hemen Başla 
+                    <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                  <button 
+                    onClick={() => navigate('/welcome')}
+                    className="px-8 py-4 bg-white/60 dark:bg-white/10 text-slate-800 dark:text-white border border-slate-300 dark:border-white/20 rounded-2xl font-bold text-lg hover:bg-white dark:hover:bg-white/20 transition-all"
+                  >
+                    Kayıt Olmadan İncele
+                  </button>
                 </div>
-              </button>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Carousel Controls */}
+          <button 
+            onClick={prevSlide}
+            className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/50 dark:bg-black/50 backdrop-blur-md border border-white/20 text-slate-800 dark:text-white hover:bg-white dark:hover:bg-black/80 transition-all z-20"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          <button 
+            onClick={nextSlide}
+            className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/50 dark:bg-black/50 backdrop-blur-md border border-white/20 text-slate-800 dark:text-white hover:bg-white dark:hover:bg-black/80 transition-all z-20"
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
+
+          {/* Carousel Indicators */}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-20">
+            {carouselSlides.map((_, idx) => (
+              <button 
+                key={idx}
+                onClick={() => setCurrentSlide(idx)}
+                className={`w-3 h-3 rounded-full transition-all duration-300 ${currentSlide === idx ? 'bg-indigo-600 dark:bg-indigo-400 scale-125' : 'bg-slate-300 dark:bg-white/30 hover:bg-slate-400 dark:hover:bg-white/50'}`}
+              />
             ))}
           </div>
+        </section>
 
-          {/* Footer CTA */}
-          <div className="flex flex-col items-center gap-6">
-            <button
-              onClick={handleContinue}
-              disabled={!selectedOption}
-              className="group bg-primary hover:bg-primary/90 text-white font-bold py-5 px-16 rounded-xl text-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
-            >
-              Devam Et
-              <span className="material-icons-round group-hover:translate-x-1 transition-transform">
-                arrow_forward
-              </span>
-            </button>
-            <button className="text-slate-500 dark:text-slate-400 hover:text-primary text-sm font-medium transition-colors flex items-center gap-1">
-              <span className="material-icons-round text-base">help_outline</span>
-              Farklı bir şey mi arıyorsun? Bizimle iletişime geç
-            </button>
+        {/* --- About Us Section --- */}
+        <section className="flex flex-col lg:flex-row gap-12 items-center">
+          <div className="flex-1 relative">
+            <div className="absolute inset-0 bg-blue-500/20 rounded-[3rem] blur-[80px]" />
+            <img 
+              src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1000&auto=format&fit=crop" 
+              alt="Students collaborating" 
+              className="relative z-10 rounded-[3rem] object-cover h-[400px] w-full shadow-2xl border border-white/20"
+            />
           </div>
-        </div>
-      </main>
+          <div className="flex-1 flex flex-col gap-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 dark:bg-blue-500/20 border border-blue-500/20 text-blue-700 dark:text-blue-400 w-fit text-sm font-bold shadow-sm">
+              <Users className="w-4 h-4" />
+              Hakkımızda
+            </div>
+            <h2 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white leading-tight">
+              Eğitimi Gelecekle <br/> Birleştiriyoruz.
+            </h2>
+            <p className="text-lg text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+              Eğitim sadece kitaplardaki teorik bilgilerden ibaret değildir. OGRENAPP olarak amacımız, öğrencileri gerçek dünyanın gereksinimleriyle erken yaşta tanıştırmaktır. Yumuşak beceriler (soft skills), meslek simülasyonları ve interaktif mülakat platformlarımızla sıradan bir öğrenme sürecini, kariyer inşasına dönüştürüyoruz.
+            </p>
+            <ul className="space-y-4 mt-4">
+              {[
+                "Modern ve Oyunlaştırılmış UX",
+                "Gerçek Verilerle Sektör Analizleri",
+                "Kişiselleştirilmiş Gelişim Haritası"
+              ].map((item, i) => (
+                <li key={i} className="flex items-center gap-3 font-bold text-slate-800 dark:text-slate-200">
+                  <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                    <CheckIcon />
+                  </div>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
 
-      {/* Visual Background Element */}
-      <div className="fixed bottom-0 left-0 w-full h-1/3 pointer-events-none opacity-10 -z-10 bg-gradient-to-t from-primary/20 via-primary/10 to-transparent"></div>
-      <div className="fixed top-0 right-0 w-96 h-96 pointer-events-none opacity-5 -z-10 bg-primary rounded-full blur-3xl"></div>
+        {/* --- Contact / CTA Section --- */}
+        <section className="bg-gradient-to-br from-indigo-900 to-purple-900 rounded-[3rem] p-10 sm:p-16 relative overflow-hidden shadow-2xl">
+           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-fuchsia-500/30 rounded-full blur-[120px] pointer-events-none" />
+           <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/30 rounded-full blur-[100px] pointer-events-none" />
+           
+           <div className="relative z-10 flex flex-col lg:flex-row gap-12 items-center justify-between">
+              <div className="text-center lg:text-left max-w-2xl">
+                <h2 className="text-3xl sm:text-5xl font-black text-white mb-6">
+                  Bir Sorun Mu Var? <br/> Ya da Sadece Merhaba De!
+                </h2>
+                <p className="text-indigo-200 text-lg font-medium mb-8">
+                  Ekibimiz sana yardımcı olmak için burada. Her türlü görüş, öneri veya destek talebi için bize ulaşabilirsin.
+                </p>
+                <button 
+                  onClick={() => navigate('/login')}
+                  className="px-8 py-4 bg-white text-indigo-900 rounded-2xl font-black text-lg shadow-xl hover:scale-105 transition-transform"
+                >
+                  Platforma Katıl
+                </button>
+              </div>
 
-      {/* Simple Page Footer */}
-      <footer className="w-full py-6 sm:py-8 px-4 sm:px-6 lg:px-8 text-center text-slate-400 dark:text-slate-500 text-sm border-t border-slate-200/50 dark:border-slate-800/50 mt-auto flex-shrink-0">
-        <p>© 2024 Portlink Maritime Marketplace. Tüm hakları saklıdır.</p>
-      </footer>
-    </FullPageLayout>
+              <div className="flex flex-col gap-6 w-full max-w-md">
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-2xl flex items-center gap-4 text-white">
+                  <div className="p-3 bg-white/20 rounded-xl"><Mail className="w-6 h-6" /></div>
+                  <div>
+                    <h4 className="font-bold">E-posta Adresimiz</h4>
+                    <p className="text-indigo-200 text-sm">iletisim@ogrenapp.com</p>
+                  </div>
+                </div>
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-2xl flex items-center gap-4 text-white">
+                  <div className="p-3 bg-white/20 rounded-xl"><Phone className="w-6 h-6" /></div>
+                  <div>
+                    <h4 className="font-bold">Telefon (Destek)</h4>
+                    <p className="text-indigo-200 text-sm">+90 (850) 123 45 67</p>
+                  </div>
+                </div>
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-2xl flex items-center gap-4 text-white">
+                  <div className="p-3 bg-white/20 rounded-xl"><MapPin className="w-6 h-6" /></div>
+                  <div>
+                    <h4 className="font-bold">Merkez Ofis</h4>
+                    <p className="text-indigo-200 text-sm">Teknopark İstanbul, Pendik</p>
+                  </div>
+                </div>
+              </div>
+           </div>
+        </section>
+
+      </div>
+    </div>
   );
 };
+
+const CheckIcon = () => (
+  <svg width="14" height="10" viewBox="0 0 14 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M1 5L4.5 8.5L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
 
 export default Home;

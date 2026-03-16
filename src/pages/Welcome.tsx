@@ -1,220 +1,242 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import FullPageLayout from '../components/FullPageLayout';
+import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { GraduationCap, Code2, BookOpen, Rocket, Star, Target, Sparkles, ChevronRight } from 'lucide-react';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
-const Welcome: React.FC = () => {
-  const navigate = useNavigate();
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
-  const features = [
-    {
-      icon: 'anchor',
-      title: 'Güvenilir Ağ',
-      description: 'Denizcilik sektöründe güvenilir ve profesyonel hizmet sağlayıcıları ile bağlantı kurun.'
+// ----------------------------------------------------------------------
+// Reusable Component: Floating Portal Card
+// ----------------------------------------------------------------------
+interface FloatingPortalCardProps {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  to: string;
+  colorScheme: 'blue' | 'purple' | 'emerald';
+  delay: number;
+}
+
+const FloatingPortalCard: React.FC<FloatingPortalCardProps> = ({ 
+  title, 
+  description, 
+  icon, 
+  to, 
+  colorScheme,
+  delay 
+}) => {
+  const schemes = {
+    blue: {
+      bg: "bg-blue-500/10",
+      border: "border-blue-300/40 dark:border-blue-400/20 hover:border-blue-500/60 dark:hover:border-blue-400/50",
+      glow: "shadow-blue-500/20 group-hover:shadow-blue-500/40",
+      text: "text-blue-600 dark:text-blue-400",
+      iconBg: "bg-blue-500/20 dark:bg-blue-500/20",
+      lightGlow: "bg-blue-400/20 dark:bg-blue-500/20",
+      badge: "bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-400/30 dark:border-blue-500/30"
     },
-    {
-      icon: 'speed',
-      title: 'Hızlı Eşleştirme',
-      description: 'İhtiyaçlarınıza en uygun çözüm ortağını hızlı ve kolay bir şekilde bulun.'
+    purple: {
+      bg: "bg-purple-500/10",
+      border: "border-purple-300/40 dark:border-purple-400/20 hover:border-purple-500/60 dark:hover:border-purple-400/50",
+      glow: "shadow-purple-500/20 group-hover:shadow-purple-500/40",
+      text: "text-purple-600 dark:text-purple-400",
+      iconBg: "bg-purple-500/20 dark:bg-purple-500/20",
+      lightGlow: "bg-purple-400/20 dark:bg-purple-500/20",
+      badge: "bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-400/30 dark:border-purple-500/30"
     },
-    {
-      icon: 'verified',
-      title: 'Doğrulanmış Profiller',
-      description: 'Tüm hizmet sağlayıcıları titizlikle incelenmiş ve doğrulanmış profesyonellerdir.'
-    },
-    {
-      icon: 'language',
-      title: 'Global Kapsam',
-      description: 'Dünya çapında limanlar ve denizcilik hizmetlerine erişim sağlayın.'
+    emerald: {
+      bg: "bg-emerald-500/10",
+      border: "border-emerald-300/40 dark:border-emerald-400/20 hover:border-emerald-500/60 dark:hover:border-emerald-400/50",
+      glow: "shadow-emerald-500/20 group-hover:shadow-emerald-500/40",
+      text: "text-emerald-600 dark:text-emerald-400",
+      iconBg: "bg-emerald-500/20 dark:bg-emerald-500/20",
+      lightGlow: "bg-emerald-400/20 dark:bg-emerald-500/20",
+      badge: "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-400/30 dark:border-emerald-500/30"
     }
-  ];
+  };
+
+  const scheme = schemes[colorScheme];
 
   return (
-    <FullPageLayout>
-      {/* Header */}
-      <header className="w-full py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200/50 dark:border-slate-700/50 flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="bg-primary p-2 rounded-xl shadow-lg shadow-primary/20">
-            <span className="material-icons-round text-white text-3xl">directions_boat</span>
-          </div>
-          <span className="text-2xl font-bold tracking-tight bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-            Portlink
-          </span>
-        </div>
-        <div className="flex items-center gap-6">
-          <button className="text-slate-600 dark:text-slate-300 hover:text-primary transition-colors font-medium">
-            Hakkımızda
-          </button>
-          <button className="text-slate-600 dark:text-slate-300 hover:text-primary transition-colors font-medium">
-            İletişim
-          </button>
-          <button
-            onClick={() => navigate('/login')}
-            className="px-6 py-2.5 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition-all shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transform hover:scale-105"
-          >
-            Giriş Yap
-          </button>
-        </div>
-      </header>
-
-      {/* Hero Section */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
-        <div className="grid lg:grid-cols-2 gap-12 items-center mb-24">
-          <div className="space-y-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 dark:bg-primary/20 rounded-full text-primary font-semibold text-sm">
-              <span className="material-icons-round text-base">rocket_launch</span>
-              Denizcilik Sektörünün Dijital Platformu
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ 
+        delay, 
+        duration: 0.6, 
+        type: "spring",
+        stiffness: 100 
+      }}
+      whileHover={{ y: -10, scale: 1.02 }}
+      className="h-full"
+    >
+      <Link 
+        to={to} 
+        className={cn(
+          "relative group flex flex-col h-full p-8 rounded-[2rem] transition-all duration-300 overflow-hidden",
+          "bg-white/50 dark:bg-white/5 backdrop-blur-xl border shadow-xl dark:shadow-2xl",
+          scheme.border, scheme.glow
+        )}
+      >
+        {/* Deep background glow */}
+        <div className={cn("absolute top-0 right-0 w-32 h-32 rounded-full blur-[50px] transition-all duration-500 opacity-50 group-hover:opacity-100", scheme.lightGlow)} />
+        
+        <div className="relative z-10 flex flex-col h-full">
+          <div className="flex justify-between items-start mb-6">
+            <div className={cn("p-4 rounded-2xl", scheme.iconBg)}>
+              {React.cloneElement(icon as React.ReactElement<any>, { className: cn("w-8 h-8", scheme.text) })}
             </div>
-            <h1 className="text-5xl lg:text-6xl font-extrabold text-slate-900 dark:text-white leading-tight">
-              Denizcilik Hizmetlerinde
-              <span className="block bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-                Doğru Eşleştirme
-              </span>
-            </h1>
-            <p className="text-xl text-slate-600 dark:text-slate-300 leading-relaxed">
-              Taşeron, yerel acente, teknik uzman ve iş ortaklığı ihtiyaçlarınız için profesyonel çözüm ortağı bulun. 
-              Portlink ile denizcilik sektöründe güvenilir bağlantılar kurun.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <button
-                onClick={() => navigate('/login')}
-                className="px-8 py-4 bg-primary text-white rounded-xl font-bold text-lg hover:bg-primary/90 transition-all shadow-xl shadow-primary/25 hover:shadow-2xl hover:shadow-primary/30 transform hover:scale-105"
-              >
-                Hemen Başla
-                <span className="material-icons-round ml-2 align-middle">arrow_forward</span>
-              </button>
-              <button className="px-8 py-4 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl font-semibold text-lg border-2 border-slate-200 dark:border-slate-700 hover:border-primary transition-all">
-                Daha Fazla Bilgi
-              </button>
-            </div>
-            <div className="flex items-center gap-8 pt-4">
-              <div>
-                <div className="text-3xl font-bold text-slate-900 dark:text-white">500+</div>
-                <div className="text-sm text-slate-500 dark:text-slate-400">Aktif Kullanıcı</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-slate-900 dark:text-white">1000+</div>
-                <div className="text-sm text-slate-500 dark:text-slate-400">Tamamlanan Proje</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-slate-900 dark:text-white">50+</div>
-                <div className="text-sm text-slate-500 dark:text-slate-400">Ülke</div>
-              </div>
-            </div>
+            <span className={cn("px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border", scheme.badge)}>
+              Keşfet
+            </span>
           </div>
-          <div className="relative">
-            <div className="relative z-10 bg-white dark:bg-slate-800 rounded-3xl p-8 shadow-2xl border border-slate-200/50 dark:border-slate-700/50">
-              <div className="aspect-square bg-gradient-to-br from-primary/10 to-blue-500/10 rounded-2xl flex items-center justify-center">
-                <span className="material-icons-round text-9xl text-primary/30">directions_boat</span>
-              </div>
-            </div>
-            <div className="absolute -top-6 -right-6 w-72 h-72 bg-primary/20 rounded-full blur-3xl -z-10"></div>
-            <div className="absolute -bottom-6 -left-6 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl -z-10"></div>
+          
+          <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-2 group-hover:text-slate-900 dark:group-hover:text-slate-100 transition-colors">
+            {title}
+          </h3>
+          <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-8 flex-grow font-medium">
+            {description}
+          </p>
+          
+          <div className={cn("mt-auto flex items-center text-sm font-bold transition-colors", scheme.text)}>
+            Maceraya Başla 
+            <ChevronRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-2" />
           </div>
         </div>
+      </Link>
+    </motion.div>
+  );
+};
 
-        {/* Features Section */}
-        <div className="mb-24">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">
-              Neden Portlink?
-            </h2>
-            <p className="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
-              Denizcilik sektöründe ihtiyacınız olan tüm hizmetlere tek platformdan erişin
-            </p>
+// ----------------------------------------------------------------------
+// Main Welcome Component
+// ----------------------------------------------------------------------
+const Welcome: React.FC = () => {
+  return (
+    <div className="w-full flex flex-col items-center justify-center p-6 sm:p-10 xl:p-16 relative transition-colors duration-700">
+      <div className="max-w-7xl w-full flex flex-col gap-10 sm:gap-14 pb-24 sm:pb-0">
+
+        {/* --- Top Section: Student Profile & Motivation --- */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col lg:flex-row gap-6 lg:items-stretch"
+        >
+          {/* Hero Greeting */}
+          <div className="flex-1 bg-gradient-to-br from-indigo-50/80 to-purple-50/80 dark:from-indigo-900/40 dark:to-purple-900/40 backdrop-blur-xl border border-indigo-200 dark:border-indigo-500/30 rounded-[2rem] p-8 sm:p-10 shadow-xl dark:shadow-2xl relative overflow-hidden transition-colors">
+             
+             {/* Decorative Elements */}
+             <div className="absolute top-[-50%] left-[-10%] w-[150%] h-[150%] bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-purple-300/30 dark:from-purple-500/10 via-transparent to-transparent pointer-events-none" />
+             <Sparkles className="absolute top-8 right-8 w-6 h-6 text-indigo-500 dark:text-indigo-400 opacity-60" />
+
+             <div className="relative z-10">
+               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/60 dark:bg-white/10 border border-white/80 dark:border-white/20 text-indigo-700 dark:text-indigo-300 w-fit text-sm font-bold mb-6 shadow-sm">
+                 <Rocket className="w-4 h-4" />
+                 Maceraya Hoş Geldin
+               </div>
+               
+               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-700 via-purple-600 to-fuchsia-600 dark:from-indigo-400 dark:via-purple-300 dark:to-fuchsia-300 mb-4 leading-tight">
+                 Geleceğini <br className="hidden sm:block" /> Şekillendir.
+               </h1>
+               
+               <p className="text-slate-700 dark:text-slate-300 text-lg max-w-xl font-medium">
+                 Senin için özel olarak hazırlanmış eğitim koçunla tanış. Rotanı seç, görevleri tamamla ve hedeflerine doğru fırlatmaya hazırlan!
+               </p>
+
+               {/* Mock Level / XP Bar for gamification */}
+               <div className="mt-8 bg-white/60 dark:bg-black/30 border border-white/60 dark:border-white/10 p-4 rounded-2xl flex items-center gap-4 max-w-md shadow-sm">
+                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-fuchsia-500 to-indigo-500 flex items-center justify-center font-bold text-white shadow-md flex-shrink-0">
+                   Lv. 1
+                 </div>
+                 <div className="flex-1 flex flex-col gap-1">
+                   <div className="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+                     <span>Haftalık Hedefler</span>
+                     <span className="text-fuchsia-600 dark:text-fuchsia-400">0 / 100 XP</span>
+                   </div>
+                   <div className="h-2 w-full bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden border border-white/40 dark:border-white/5">
+                     <motion.div 
+                       initial={{ width: 0 }}
+                       animate={{ width: "0%" }}
+                       transition={{ duration: 1.5, ease: "easeOut" }}
+                       className="h-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 rounded-full"
+                     />
+                   </div>
+                 </div>
+               </div>
+             </div>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature, index) => (
-              <div
-                key={index}
-                className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-primary transition-all hover:shadow-xl hover:shadow-primary/5 group"
-              >
-                <div className="w-14 h-14 bg-primary/10 dark:bg-primary/20 rounded-xl flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform">
-                  <span className="material-icons-round text-3xl">{feature.icon}</span>
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-                  {feature.title}
-                </h3>
-                <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                  {feature.description}
-                </p>
+
+          {/* Quick Stats / Quote */}
+          <div className="lg:w-1/3 bg-white/40 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] p-8 shadow-xl dark:shadow-2xl flex flex-col justify-between relative overflow-hidden group transition-colors">
+            <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-yellow-400/20 dark:bg-yellow-500/10 rounded-full blur-[40px] group-hover:bg-yellow-400/40 dark:group-hover:bg-yellow-500/20 transition-all duration-500" />
+            
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-4 text-yellow-600 dark:text-yellow-400">
+                <Star className="w-5 h-5 fill-yellow-500 dark:fill-yellow-400" />
+                <h3 className="font-bold tracking-wide uppercase text-sm">Günün Sözü</h3>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* CTA Section */}
-        <div className="bg-gradient-to-r from-primary to-blue-600 rounded-3xl p-12 text-center text-white relative overflow-hidden">
-          {/* Decorative circles */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
-          <div className="relative z-10">
-            <h2 className="text-4xl font-bold mb-4">Hazır mısınız?</h2>
-            <p className="text-xl mb-8 opacity-90">
-              Portlink'e katılın ve denizcilik sektöründe yeni fırsatlar keşfedin
-            </p>
-            <button
-              onClick={() => navigate('/login')}
-              className="px-10 py-4 bg-white text-primary rounded-xl font-bold text-lg hover:bg-slate-50 transition-all shadow-xl transform hover:scale-105"
-            >
-              Ücretsiz Başlayın
-            </button>
-          </div>
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="w-full bg-slate-900 text-slate-400 py-12 mt-auto flex-shrink-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="bg-primary p-1.5 rounded-lg">
-                  <span className="material-icons-round text-white text-xl">directions_boat</span>
-                </div>
-                <span className="text-xl font-bold text-white">Portlink</span>
-              </div>
-              <p className="text-sm leading-relaxed">
-                Denizcilik sektöründe güvenilir bağlantılar kuran dijital platform.
+              <p className="text-2xl font-bold text-slate-800 dark:text-white leading-relaxed italic">
+                "Ulaşılacak hedefler değil, yürünecek yollar önemlidir."
               </p>
             </div>
-            <div>
-              <h4 className="font-bold text-white mb-4">Hızlı Linkler</h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="#" className="hover:text-white transition-colors">Hakkımızda</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Hizmetler</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Fiyatlandırma</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold text-white mb-4">Destek</h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="#" className="hover:text-white transition-colors">Yardım Merkezi</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">İletişim</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Gizlilik Politikası</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Kullanım Koşulları</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold text-white mb-4">İletişim</h4>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-center gap-2">
-                  <span className="material-icons-round text-base">email</span>
-                  info@portlink.com
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="material-icons-round text-base">phone</span>
-                  +90 (212) 123 45 67
-                </li>
-              </ul>
+
+            <div className="mt-8 flex items-center justify-between border-t border-slate-300 dark:border-white/10 pt-6 relative z-10">
+              <div>
+                <p className="text-xs text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1 font-bold">Günlük Seri</p>
+                <p className="text-2xl font-black text-slate-800 dark:text-white flex items-center gap-2">
+                  0 <span className="text-orange-500 dark:text-orange-400 text-base">🔥</span>
+                </p>
+              </div>
+              <Link to="/progress" className="w-10 h-10 rounded-xl bg-white/80 hover:bg-white dark:bg-white/5 dark:hover:bg-white/10 border border-slate-300 dark:border-white/10 flex items-center justify-center transition-colors shadow-sm">
+                <Target className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+              </Link>
             </div>
           </div>
-          <div className="border-t border-slate-800 pt-8 text-center text-sm">
-            <p>© 2024 Portlink Maritime Marketplace. Tüm hakları saklıdır.</p>
+        </motion.div>
+
+        {/* --- Modules Grid --- */}
+        <div>
+          <div className="flex items-center gap-3 mb-6 relative z-10">
+            <h2 className="text-2xl font-black text-slate-800 dark:text-white">Modüller</h2>
+            <div className="h-px bg-slate-300 dark:bg-white/10 flex-1" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 min-h-[400px]">
+            <FloatingPortalCard
+              title="Üniversite Modülü"
+              description="Dijital CV'ni oluştur, sektör trendlerini yakala ve teknik mülakatlara hazırlan."
+              icon={<Code2 />}
+              to="/dashboard/universite"
+              colorScheme="blue"
+              delay={0.1}
+            />
+            
+            <FloatingPortalCard
+              title="Lise Modülü"
+              description="Karakterini analiz et, netlerini yükselt ve alternatif kariyer yollarını incele."
+              icon={<GraduationCap />}
+              to="/dashboard/lise"
+              colorScheme="purple"
+              delay={0.2}
+            />
+            
+            <FloatingPortalCard
+              title="Ortaokul Modülü"
+              description="Sosyal becerilerini takip et, liseye geçişteki rotanı şimdiden belirle. Görevleri tamamla, XP kazan!"
+              icon={<BookOpen />}
+              to="/dashboard/ortaokul"
+              colorScheme="emerald"
+              delay={0.3}
+            />
           </div>
         </div>
-      </footer>
-    </FullPageLayout>
+
+      </div>
+    </div>
   );
 };
 
