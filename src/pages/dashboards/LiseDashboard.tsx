@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Map, BrainCircuit, Compass, Check, X, Fingerprint, BarChart2, MessageCircle, Route, GraduationCap, Award } from 'lucide-react';
+import { Map, BrainCircuit, Compass, Check, X, Fingerprint, BarChart2, MessageCircle, Route, GraduationCap, Award, Building2, DollarSign, TrendingUp } from 'lucide-react';
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -21,16 +22,28 @@ const mockTraits = [
   { name: 'Sosyal Zeka', value: 0, color: 'bg-purple-500' },
 ];
 
-const mockExams = [
-  { name: 'Matematik', current: 0, target: 35, total: 40, color: 'from-fuchsia-400 to-purple-500' },
-  { name: 'Türkçe', current: 0, target: 35, total: 40, color: 'from-blue-400 to-indigo-500' },
-  { name: 'Fen Bilimleri', current: 0, target: 18, total: 20, color: 'from-emerald-400 to-teal-500' },
+const mockExamHistory = [
+  { name: '1. Deneme', net: 60 },
+  { name: '2. Deneme', net: 70 },
+  { name: '3. Deneme', net: 75 },
+  { name: '4. Deneme', net: 82 },
 ];
 
 const mockVoices = [
   { name: 'Ahmet Y.', uni: 'ODTÜ Bilgisayar', quote: "İlk sene zorlandım ama pes etmeyince kodlamanın mantığını anlıyorsunuz. Algoritma temelinizi lisede atın." },
   { name: 'Zeynep K.', uni: 'Boğaziçi İşletme', quote: "Sadece sınav odaklı olmayın. Kulüplere katılıp network kurmak en az not ortalaması kadar önemli." },
 ];
+
+const mockComparisonData = {
+  uni1: { name: 'İTÜ Bilgisayar', color: 'bg-blue-500', barColor: 'from-blue-400 to-blue-600', text: 'text-blue-600 dark:text-blue-400' },
+  uni2: { name: 'ODTÜ Bilgisayar', color: 'bg-emerald-500', barColor: 'from-emerald-400 to-emerald-600', text: 'text-emerald-600 dark:text-emerald-400' },
+  criteria: [
+    { label: 'Eğitim Kalitesi', val1: 92, val2: 95, icon: GraduationCap },
+    { label: 'Staj İmkanı', val1: 96, val2: 88, icon: Building2 },
+    { label: 'Uluslararası Fırsatlar', val1: 85, val2: 92, icon: Compass },
+    { label: 'Mezun Maaşları', val1: 94, val2: 90, icon: DollarSign },
+  ]
+};
 
 const LiseDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -259,52 +272,52 @@ const LiseDashboard: React.FC = () => {
       {/* Row 2: Exam Simulator & Campus Voices */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 relative z-10">
         
-        {/* Exam Net Simulator */}
+        {/* Exam Net Chart (Replaces YKS Net Simülatörü) */}
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.4 }}
-          className="bg-white/40 dark:bg-white/5 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-xl dark:shadow-2xl transition-colors"
+          className="bg-white/40 dark:bg-white/5 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-xl dark:shadow-2xl transition-colors flex flex-col"
         >
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
-              <BarChart2 className="text-fuchsia-600 dark:text-fuchsia-400" /> YKS Net Simülatörü
+              <TrendingUp className="text-fuchsia-600 dark:text-fuchsia-400" /> Deneme Net Grafiği
             </h2>
             <div className="px-3 py-1 bg-white/50 dark:bg-white/10 rounded-lg border border-slate-200 dark:border-white/10 text-xs font-bold text-slate-600 dark:text-slate-300">
-              Hedef: ODTÜ Bilgisayar
+              Son 4 Deneme
             </div>
           </div>
 
-          <div className="space-y-6">
-            {mockExams.map((exam, i) => (
-              <div key={i}>
-                <div className="flex justify-between items-end mb-2">
-                  <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{exam.name}</span>
-                  <div className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                    <span className="text-slate-800 dark:text-white text-sm">{exam.current}</span> / {exam.target} Net (H: {exam.total})
-                  </div>
-                </div>
-                <div className="w-full h-3 bg-slate-200 dark:bg-black/40 rounded-full overflow-hidden border border-white/20 dark:border-white/5 relative">
-                  {/* Target line indicator */}
-                  <div 
-                    className="absolute top-0 bottom-0 w-1 bg-red-400 z-10" 
-                    style={{ left: `${(exam.target / exam.total) * 100}%` }}
-                  />
-                  {/* Current progress indicator */}
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${(exam.current / exam.total) * 100}%` }}
-                    transition={{ duration: 1.5, ease: "easeOut" }}
-                    className={cn("h-full rounded-full bg-gradient-to-r relative", exam.color)}
-                  >
-                  </motion.div>
-                </div>
-              </div>
-            ))}
+          <div className="flex-1 w-full min-h-[200px]">
+            <ResponsiveContainer width="100%" height={220}>
+              <AreaChart data={mockExamHistory} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorNet" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#d946ef" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} domain={[50, 'dataMax + 10']} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', borderRadius: '12px', border: 'none', color: '#fff' }}
+                  itemStyle={{ color: '#e2e8f0', fontWeight: 'bold' }}
+                />
+                <Area type="monotone" dataKey="net" stroke="#d946ef" strokeWidth={3} fillOpacity={1} fill="url(#colorNet)" />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
           
-          <div className="mt-8 p-4 bg-fuchsia-500/10 border border-fuchsia-500/20 rounded-xl">
-             <p className="text-sm text-slate-700 dark:text-fuchsia-100 font-medium">💡 Hedefine ulaşmak için sisteme güncel bir deneme skoru girmelisin!</p>
+          <div className="mt-6 p-4 bg-gradient-to-r from-fuchsia-500/10 to-purple-500/10 border border-fuchsia-500/20 rounded-2xl flex items-start gap-3">
+             <div className="p-2 bg-fuchsia-500/20 rounded-xl text-fuchsia-600 dark:text-fuchsia-400 shadow-sm mt-1">
+               <TrendingUp className="w-5 h-5" />
+             </div>
+             <div>
+               <h4 className="text-sm font-bold text-slate-800 dark:text-white mb-1">Mükemmel Gidiyorsun! 🚀</h4>
+               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+                 Son 4 denemede netlerini <strong>60'tan 82'ye</strong> çıkararak toplamda <strong className="text-fuchsia-600 dark:text-fuchsia-400">22 netlik</strong> bir artış sağladın. Bu istikrarla hedeflerine ulaşman an meselesi! Aynen böyle devam!
+               </p>
+             </div>
           </div>
         </motion.div>
 
@@ -342,6 +355,96 @@ const LiseDashboard: React.FC = () => {
 
         </motion.div>
 
+      </div>
+
+      {/* Row 3: University Comparison */}
+      <div className="grid grid-cols-1 relative z-10 w-full mt-4">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="bg-white/40 dark:bg-white/5 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-3xl p-6 sm:p-10 shadow-xl dark:shadow-2xl transition-colors relative overflow-hidden"
+        >
+          {/* Background glows for the comparison section */}
+          <div className="absolute top-0 left-0 w-64 h-64 bg-blue-500/10 rounded-full blur-[80px] pointer-events-none" />
+          <div className="absolute bottom-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between mb-10 gap-4">
+            <div className="flex flex-col gap-2">
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white flex items-center gap-3">
+                <Building2 className="w-8 h-8 text-indigo-500 dark:text-indigo-400" /> Hedef Üniversite Karşılaştırması
+              </h2>
+              <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base font-medium">Bölümlerin güçlü ve zayıf yönlerini analiz et.</p>
+            </div>
+            
+            {/* Legend */}
+            <div className="flex items-center gap-6 bg-white/50 dark:bg-black/20 px-4 py-2 rounded-2xl border border-white/40 dark:border-white/5 shadow-sm">
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${mockComparisonData.uni1.color} shadow-sm`} />
+                <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{mockComparisonData.uni1.name}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${mockComparisonData.uni2.color} shadow-sm`} />
+                <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{mockComparisonData.uni2.name}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+            {mockComparisonData.criteria.map((item, idx) => {
+               const Icon = item.icon;
+               // Calculate which one is higher for bolding text
+               const isUni1Higher = item.val1 >= item.val2;
+               const isUni2Higher = item.val2 >= item.val1;
+
+               return (
+                 <div key={idx} className="flex flex-col gap-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/5 shadow-sm">
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <span className="text-sm sm:text-base font-bold text-slate-700 dark:text-slate-200">{item.label}</span>
+                    </div>
+
+                    {/* Uni 1 Bar */}
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex justify-between items-center px-1">
+                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{mockComparisonData.uni1.name}</span>
+                        <span className={`text-sm font-black ${isUni1Higher ? mockComparisonData.uni1.text : 'text-slate-400 dark:text-slate-500'}`}>{item.val1}/100</span>
+                      </div>
+                      <div className="w-full h-3 sm:h-4 bg-slate-200 dark:bg-black/40 rounded-full overflow-hidden border border-white/20 dark:border-white/5">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          whileInView={{ width: `${item.val1}%` }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 1.5, ease: "easeOut", delay: 0.1 * idx }}
+                          className={`h-full rounded-full bg-gradient-to-r ${mockComparisonData.uni1.barColor} relative`}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Uni 2 Bar */}
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex justify-between items-center px-1">
+                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{mockComparisonData.uni2.name}</span>
+                        <span className={`text-sm font-black ${isUni2Higher ? mockComparisonData.uni2.text : 'text-slate-400 dark:text-slate-500'}`}>{item.val2}/100</span>
+                      </div>
+                      <div className="w-full h-3 sm:h-4 bg-slate-200 dark:bg-black/40 rounded-full overflow-hidden border border-white/20 dark:border-white/5">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          whileInView={{ width: `${item.val2}%` }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 1.5, ease: "easeOut", delay: 0.1 * idx }}
+                          className={`h-full rounded-full bg-gradient-to-r ${mockComparisonData.uni2.barColor} relative`}
+                        />
+                      </div>
+                    </div>
+                 </div>
+               )
+            })}
+          </div>
+
+        </motion.div>
       </div>
     </div>
   );

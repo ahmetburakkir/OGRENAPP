@@ -3,6 +3,7 @@ import GlobalLayout from './components/GlobalLayout';
 import Home from './pages/Home';
 import Welcome from './pages/Welcome';
 import UniversiteDashboard from './pages/dashboards/UniversiteDashboard';
+import JobPrepTest from './pages/dashboards/JobPrepTest';
 import LiseDashboard from './pages/dashboards/LiseDashboard';
 import KarakterTesti from './pages/dashboards/KarakterTesti';
 import Auth from './pages/Auth';
@@ -27,6 +28,7 @@ function App() {
             {/* Protected Routes */}
             <Route path="/welcome" element={<ProtectedRoute><Welcome /></ProtectedRoute>} />
             <Route path="/dashboard/universite" element={<ProtectedRoute><UniversiteDashboard /></ProtectedRoute>} />
+            <Route path="/dashboard/universite/job-test" element={<ProtectedRoute><JobPrepTest /></ProtectedRoute>} />
             <Route path="/dashboard/lise" element={<ProtectedRoute><LiseDashboard /></ProtectedRoute>} />
             <Route path="/dashboard/lise/karakter-testi" element={<ProtectedRoute><KarakterTesti /></ProtectedRoute>} />
             <Route path="/dashboard/ortaokul" element={<ProtectedRoute><OrtaokulDashboard /></ProtectedRoute>} />

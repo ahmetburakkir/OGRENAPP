@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Terminal, Send, Target, Zap, Github, ExternalLink, TrendingUp, Calendar, MapPin, Briefcase, ChevronRight } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { JobPrepSection } from '../../components/JobPrepSection';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -238,6 +239,10 @@ const UniversiteDashboard: React.FC = () => {
         </div>
 
       </div>
+
+      {/* New Job Preparation Section */}
+      <JobPrepSection />
+
     </div>
   );
 };
