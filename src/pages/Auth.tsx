@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Lock, Mail, User, ArrowRight, Github, Chrome } from 'lucide-react';
+import { Lock, Mail, User, ArrowRight, Github, Chrome, Zap } from 'lucide-react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -126,6 +126,31 @@ const Auth: React.FC = () => {
               <button className="flex-1 py-3 bg-white/60 dark:bg-white/5 hover:bg-white border border-slate-300 dark:border-white/10 dark:hover:bg-white/10 rounded-2xl flex items-center justify-center transition-colors shadow-sm">
                 <Github className="w-5 h-5 text-slate-600 dark:text-slate-300" />
               </button>
+            </div>
+
+            {/* Quick Login - Temporary for Test/Demo */}
+            <div className="mt-6 flex flex-col gap-2 relative z-10">
+              <p className="text-[10px] text-center font-bold text-slate-400 uppercase tracking-widest mb-1">Hızlı Giriş (Demo)</p>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => { login(); navigate('/dashboard/ortaokul'); }}
+                  className="flex-1 py-2 px-1 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-xl text-[10px] font-black text-emerald-600 dark:text-emerald-400 transition-all flex items-center justify-center gap-1"
+                >
+                  <Zap className="w-3 h-3" /> Ortaokul
+                </button>
+                <button 
+                  onClick={() => { login(); navigate('/dashboard/lise'); }}
+                  className="flex-1 py-2 px-1 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 rounded-xl text-[10px] font-black text-indigo-600 dark:text-indigo-400 transition-all flex items-center justify-center gap-1"
+                >
+                  <Zap className="w-3 h-3" /> Lise
+                </button>
+                <button 
+                  onClick={() => { login(); navigate('/dashboard/universite'); }}
+                  className="flex-1 py-2 px-1 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 rounded-xl text-[10px] font-black text-blue-600 dark:text-blue-400 transition-all flex items-center justify-center gap-1"
+                >
+                  <Zap className="w-3 h-3" /> Üniversite
+                </button>
+              </div>
             </div>
 
             {/* Toggle Mode */}
