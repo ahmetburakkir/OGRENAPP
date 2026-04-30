@@ -1,0 +1,488 @@
+Backend Akis Senaryosu (A-B-C Katmanlari)
+=========================================
+
+Kapsam
+- Adim A: Scoring Engine
+- Adim B: Interpretation Layer
+- Adim C: AI Layer
+
+Uctan Uca Senaryo
+1) Kullanici `POST /api/test/submit` ile cevaplari yollar.
+2) `TestController`, istegi `ITestService.SubmitTestAsync` (TestManager) katmanina iletir.
+3) TestManager:
+   - `TestResult` kaydini olusturur.
+   - Her cevap icin `TestAnswer` kaydi olusturur.
+   - Kayitlari DB'ye yazar.
+4) TestManager, `IScoringEngine.CalculateAsync(testResultId)` cagirir.
+5) ScoringEngine:
+   - `TestAnswers + QuestionTopics + Topic` iliskilerini yukler.
+   - Her cevap icin `AnswerValue * Weight * Direction(IsPositive)` hesaplar.
+   - Topic bazli skor sozlugu (`TopicScores`) uretir.
+6) TestManager, toplam skoru `TestResult.Score` alanina yazar ve gunceller.
+7) Daha sonra kullanici veya sistem `POST /api/recommendation/generate/{testResultId}` cagirir.
+8) `RecommendationController`, istegi `IAiRecommendationService.GenerateRecommendationAsync` (AiRecommendationManager) katmanina iletir.
+9) AiRecommendationManager:
+   - Ilgili TestResult'i yukler.
+   - `IInterpretationService.InterpretAsync` ile profile raporu olusturur.
+10) InterpretationService:
+   - Skorlari tekrar `IScoringEngine` uzerinden alir.
+   - MBTI kodu (E/I, S/N, T/F, J/P) belirler.
+   - RIASEC icin en yuksek 3 harften Holland kodu uretir.
+   - `PromptContext` ve statik yorumlari hazirlar.
+11) AiRecommendationManager, `IRecommendationEngine.GenerateAsync(profile)` cagirir.
+12) RecommendationEngine:
+   - System prompt + profile context + hedef odakli user prompt olusturur.
+   - `IAiProvider.GenerateCareerRecommendationAsync(...)` ile AI servisini cagirir.
+13) OpenAiProvider:
+   - API key varsa OpenAI chat/completions endpoint'ine gider.
+   - API key yoksa fallback kariyer onerisi dondurur.
+14) Uretilen recommendation metni `ai_recommendations` tablosuna kaydedilir.
+15) API, `AiRecommendationDto` ile istemciye doner.
+
+
+PlantUML Sequence Diagram
+=========================
+
+```plantuml
+@startuml
+title OgrenApp Backend - A/B/C Sequence
+
+actor User
+participant TestController
+participant TestManager
+participant ScoringEngine
+database PostgreSQL as DB
+participant RecommendationController
+participant AiRecommendationManager
+participant InterpretationService
+participant RecommendationEngine
+participant OpenAiProvider
+participant OpenAI
+
+== Test Submit ==
+User -> TestController: POST /api/test/submit (SubmitTestDto)
+TestController -> TestManager: SubmitTestAsync(submitData)
+TestManager -> DB: INSERT TestResult
+loop each answer
+  TestManager -> DB: INSERT TestAnswer
+end
+TestManager -> ScoringEngine: CalculateAsync(testResultId)
+ScoringEngine -> DB: SELECT TestAnswers + QuestionTopics + Topic
+ScoringEngine --> TestManager: ScoreResultDto(TopicScores)
+TestManager -> DB: UPDATE TestResult.Score
+TestManager --> TestController: testResultId
+TestController --> User: 200 OK (SubmitTestResultDto)
+
+== Recommendation Generate ==
+User -> RecommendationController: POST /api/recommendation/generate/{testResultId}
+RecommendationController -> AiRecommendationManager: GenerateRecommendationAsync(testResultId)
+AiRecommendationManager -> DB: SELECT TestResult + Test
+AiRecommendationManager -> InterpretationService: InterpretAsync(testResultId)
+InterpretationService -> ScoringEngine: CalculateAsync(testResultId)
+ScoringEngine -> DB: SELECT scoring data
+ScoringEngine --> InterpretationService: TopicScores
+InterpretationService --> AiRecommendationManager: ProfileReportDto(MBTI, RIASEC, PromptContext)
+AiRecommendationManager -> RecommendationEngine: GenerateAsync(profile)
+RecommendationEngine -> OpenAiProvider: GenerateCareerRecommendationAsync(system, user)
+
+alt API key configured
+  OpenAiProvider -> OpenAI: POST /v1/chat/completions
+  OpenAI --> OpenAiProvider: recommendation text
+else API key missing
+  OpenAiProvider --> RecommendationEngine: fallback recommendation text
+end
+
+RecommendationEngine --> AiRecommendationManager: recommendation text
+AiRecommendationManager -> DB: INSERT ai_recommendations
+AiRecommendationManager --> RecommendationController: AiRecommendationDto
+RecommendationController --> User: 200 OK
+
+@enduml
+```
+
+
+3. Küçük Bir "Peer" Tavsiyesi (İnce Ayar)
+Diyagramda her şey mükemmel işliyor, ancak gerçek dünya senaryoları için şu noktayı koduna eklediğinden emin ol:
+
+Caching (Önbellekleme): InterpretationService, ScoringEngine.CalculateAsync metodunu çağırdığında, eğer skorlar TestResult.Score alanında zaten güncelse tekrar DB'ye gitmek yerine mevcut skoru kullanabilir. Bu, Recommendation Generate isteğini hızlandıracaktır.
+
+
+Swagger Test Plani (JWT + Admin Authorize)
+==========================================
+
+On Kosullar
+- API ayakta olmali (`dotnet run`).
+- Swagger: `http://localhost:5108/swagger`
+- Startup seed aktif oldugu icin varsayilan admin:
+  - Username: `admin`
+  - Password: `admin123`
+
+Adim 1 - Login ile token al
+1) Swagger'da `POST /api/user/login` endpointini ac.
+2) Request body:
+```json
+{
+  "username": "admin",
+  "password": "admin123"
+}
+```
+3) `Execute` ile cagir.
+4) Response'tan `token` alanini kopyala.
+
+Adim 2 - Swagger Authorize
+1) Sağ ustteki `Authorize` butonuna tikla.
+2) Degeri su formatta yapistir:
+   - `Bearer <TOKEN>`
+3) `Authorize` ve sonra `Close`.
+
+Adim 3 - Admin endpoint dogrulama
+1) `GET /api/user` endpointini cagir.
+2) Beklenen:
+   - 200 OK + kullanici listesi.
+3) Token olmadan ayni endpoint:
+   - 401 Unauthorized.
+4) Admin olmayan token ile:
+   - 403 Forbidden.
+
+Adim 4 - Uctan uca test (A-B-C)
+1) `GET /api/test` -> testId al.
+2) `GET /api/test/{id}` -> sorulari cek.
+3) `POST /api/test/submit` -> `testResultId` al.
+4) `POST /api/recommendation/generate/{testResultId}` -> recommendation uret.
+5) `GET /api/recommendation/user/{userId}` -> kaydin olustugunu dogrula.
+
+Adim 5 - Negatif testler
+- Yanlis login -> `POST /api/user/login` => 401
+- Gecersiz JWT -> admin endpoint => 401
+- Dogru JWT ama role=User -> admin endpoint => 403
+
+Hizli Sorun Giderme
+- 401 aliyorsan:
+  - `Bearer` prefix var mi kontrol et.
+  - token suresi dolmus olabilir (yeniden login ol).
+- 403 aliyorsan:
+  - token icindeki `role` claim `Admin` degil.
+- Login calisiyor ama admin yoksa:
+  - `SeedAdmin` ayarlarini kontrol et ve uygulamayi restart et.
+
+
+Tam Swagger Test Matrisi (Tum Endpointler)
+==========================================
+
+0) Hazirlik
+- Uygulamayi calistir: `dotnet run`
+- Swagger ac: `http://localhost:5108/swagger`
+- Seed admin ile login ol (asagida Adim 1).
+
+1) User Endpointleri
+--------------------
+
+1.1 `POST /api/user/register`
+- Amac: yeni kullanici olusturma.
+- Beklenen: 200 + yeni `userId`.
+- Negatif: ayni username/email varsa (ileride eklenecek unique kural) hata donmeli.
+
+1.2 `POST /api/user/login`
+- Amac: JWT token alma.
+- Beklenen: 200 + `token`, `role`, `userId`.
+- Negatif: hatali sifre -> 401.
+
+1.3 `GET /api/user/{id}`
+- Amac: tek kullanici detay.
+- Beklenen: 200 + `UserDto`.
+- Negatif: olmayan id -> null/404 (servis davranisina gore kontrol et).
+
+1.4 `GET /api/user` (Admin)
+- Amac: tum kullanicilari listeleme.
+- Beklenen: Admin token ile 200.
+- Negatif:
+  - token yok -> 401
+  - Admin olmayan role -> 403
+
+1.5 `PATCH /api/user/{id}`
+- Amac: kullanici guncelleme.
+- Beklenen: 200 + basari mesaji.
+- Negatif: olmayan id -> 404.
+
+1.6 `DELETE /api/user/{id}` (Admin)
+- Amac: kullanici silme.
+- Beklenen: Admin token ile 200.
+- Negatif:
+  - token yok -> 401
+  - Admin olmayan role -> 403
+  - olmayan id -> 404
+
+2) Test Endpointleri
+--------------------
+
+2.1 `GET /api/test`
+- Amac: test listesini alma.
+- Beklenen: 200 + `TestSummaryDto[]`.
+
+2.2 `GET /api/test/{id}`
+- Amac: secilen testin soru detaylari.
+- Beklenen: 200 + `TestDto`.
+- Negatif: gecersiz id -> 404.
+
+2.3 `POST /api/test/submit`
+- Amac: `test_results` + `test_answers` olusturma.
+- Beklenen: 200 + `testResultId`.
+- Ornek body:
+```json
+{
+  "userId": "00000000-0000-0000-0000-000000000001",
+  "testId": "f3b3b3b3-b3b3-b3b3-b3b3-b3b3b3b3b3b3",
+  "answers": [
+    { "questionId": "a1a1a1a1-a1a1-a1a1-a1a1-a1a1a1a1a1a1", "selectedAnswer": "1", "rank": 0 },
+    { "questionId": "c3c3c3c3-c3c3-c3c3-c3c3-c3c3c3c3c3c3", "selectedAnswer": "4", "rank": 0 },
+    { "questionId": "d4d4d4d4-d4d4-d4d4-d4d4-d4d4d4d4d4d4", "selectedAnswer": "Kariyer Gelisimi", "rank": 1 }
+  ]
+}
+```
+- Negatif: eksik answers -> 400 (validation eklenirse).
+
+2.4 `GET /api/test/results/user/{userId}`
+- Amac: kullanicinin test sonuclari.
+- Beklenen: 200 + `TestResultDto[]`.
+
+2.5 `GET /api/test/results/{resultId}`
+- Amac: tek test sonucu.
+- Beklenen: 200 + `TestResultDto`.
+- Negatif: olmayan id -> 404.
+
+3) Recommendation Endpointleri
+------------------------------
+
+3.1 `POST /api/recommendation/generate/{testResultId}`
+- Amac: Adim B+C calisir, `ai_recommendations` kaydi olusur.
+- Beklenen: 200 + `AiRecommendationDto`.
+- Not: OpenAI key yoksa fallback recommendation doner (normal davranis).
+
+3.2 `GET /api/recommendation/user/{userId}`
+- Amac: kullanicinin tum AI onerilerini listeleme.
+- Beklenen: 200 + `AiRecommendationDto[]`.
+
+3.3 `GET /api/recommendation/{id}`
+- Amac: tek AI recommendation detayi.
+- Beklenen: 200 + `AiRecommendationDto`.
+- Negatif: olmayan id -> 404.
+
+4) Topic Endpointleri
+---------------------
+
+4.1 `GET /api/topic`
+- Amac: tum topicleri listeleme.
+- Beklenen: 200 + `TopicDto[]`.
+
+4.2 `GET /api/topic/category/{category}`
+- Amac: kategori bazli topic filtreleme (MBTI/RIASEC).
+- Beklenen: 200 + filtrelenmis `TopicDto[]`.
+
+5) Question Endpointleri
+------------------------
+
+5.1 `GET /api/question/test/{testId}`
+- Amac: teste bagli sorulari alma.
+- Beklenen: 200 + soru listesi.
+
+6) Uctan Uca Kabul Senaryosu (Tek Oturum)
+------------------------------------------
+
+1. `POST /api/user/login` ile admin token al.
+2. Swagger `Authorize` ile token set et.
+3. `GET /api/test` -> test id al.
+4. `GET /api/test/{id}` -> sorulari al.
+5. `POST /api/test/submit` -> result id al.
+6. `POST /api/recommendation/generate/{testResultId}` -> AI metni al.
+7. `GET /api/recommendation/user/{userId}` -> kayitlandi mi kontrol et.
+8. `GET /api/user` -> admin yetkisi dogrula (200).
+
+7) Basari Kriterleri
+--------------------
+- Tum 2xx endpointler beklenen DTO yapisini donmeli.
+- Yetki korumali endpointler 401/403 davranisini dogru vermeli.
+- Submit + Generate zinciri her calismada DB'ye yeni kayit dusmeli.
+- Swagger uzerinden manuel testte kritik akista 5xx olmamali.
+
+
+Standart User Akisi (Admin Olmayan)
+===================================
+
+Hedef
+- Standart bir kullanicinin sisteme giris yapip test cozmesi, AI onerisi almasi ve sonuc gecmisini goruntulemesi.
+
+Rol ve Yetki Siniri
+- Role: `User`
+- Erisebilecekleri:
+  - `POST /api/user/register`
+  - `POST /api/user/login`
+  - `GET /api/test`
+  - `GET /api/test/{id}`
+  - `POST /api/test/submit`
+  - `GET /api/test/results/user/{userId}`
+  - `GET /api/test/results/{resultId}`
+  - `POST /api/recommendation/generate/{testResultId}`
+  - `GET /api/recommendation/user/{userId}`
+  - `GET /api/recommendation/{id}`
+- Erisemeyecekleri:
+  - `GET /api/user` (Admin)
+  - `DELETE /api/user/{id}` (Admin)
+
+Adim Adim Standart User Senaryosu
+---------------------------------
+
+1) Kayit
+- `POST /api/user/register`
+- Cikti: yeni `userId`
+
+2) Login
+- `POST /api/user/login`
+- Cikti: `token`, `role=User`, `userId`
+
+3) Token ile authorize
+- Swagger `Authorize`:
+  - `Bearer <USER_TOKEN>`
+
+4) Test kesfi
+- `GET /api/test` ile testleri listele.
+- `GET /api/test/{id}` ile test detayina gir.
+
+5) Test cozme ve submit
+- Cevaplari `SubmitTestDto` formatinda hazirla.
+- `POST /api/test/submit`
+- Cikti: `testResultId`
+
+6) Recommendation uretme
+- `POST /api/recommendation/generate/{testResultId}`
+- Cikti: `AiRecommendationDto` (OpenAI key yoksa fallback metin)
+
+7) Sonuclari izleme
+- `GET /api/test/results/user/{userId}` -> test gecmisi
+- `GET /api/recommendation/user/{userId}` -> AI onerileri
+- `GET /api/recommendation/{id}` -> tek oneriyi detayli ac
+
+Beklenen Davranislar (User Perspektifi)
+---------------------------------------
+- User token ile admin endpoint cagrilirsa `403 Forbidden` donmeli.
+- Gecersiz/eksik token ile korumali endpointlerde `401 Unauthorized` donmeli.
+- Her submit sonrasi yeni `testResult` olusmali.
+- Her generate sonrasi yeni `ai_recommendations` kaydi olusmali.
+
+
+Standart User Icin Swagger Test Plani
+=====================================
+
+On Kosullar
+- API calisiyor olmali (`dotnet run`).
+- Swagger acik olmali: `http://localhost:5108/swagger`
+- Kullanici kaydi yoksa once register adimi calistir.
+
+Adim 1 - User Register
+----------------------
+Endpoint: `POST /api/user/register`
+
+Ornek Body:
+```json
+{
+  "firstName": "Ali",
+  "lastName": "Yilmaz",
+  "username": "ali.user",
+  "email": "ali.user@ogrenapp.local",
+  "password": "123456"
+}
+```
+
+Beklenen:
+- 200 OK
+- Response bir `userId` doner.
+
+Adim 2 - User Login (JWT Al)
+----------------------------
+Endpoint: `POST /api/user/login`
+
+Ornek Body:
+```json
+{
+  "username": "ali.user",
+  "password": "123456"
+}
+```
+
+Beklenen:
+- 200 OK
+- `token`, `role`, `userId` doner.
+- `role` degeri `User` olmali.
+
+Adim 3 - Swagger Authorize
+--------------------------
+1) Swagger sag ust `Authorize` butonuna tikla.
+2) Degeri su formatta gir:
+   - `Bearer <USER_TOKEN>`
+3) `Authorize` -> `Close`.
+
+Adim 4 - User'in Test Akisi
+---------------------------
+4.1 `GET /api/test`
+- Test listesini getir.
+- Beklenen: 200 + en az 1 test.
+
+4.2 `GET /api/test/{id}`
+- Secilen testin sorularini getir.
+- Beklenen: 200 + `questions` dolu.
+
+4.3 `POST /api/test/submit`
+- User cevaplarini gonder.
+- Beklenen: 200 + `testResultId`.
+
+Ornek Body:
+```json
+{
+  "userId": "REPLACE_WITH_LOGIN_USER_ID",
+  "testId": "f3b3b3b3-b3b3-b3b3-b3b3-b3b3b3b3b3b3",
+  "answers": [
+    { "questionId": "a1a1a1a1-a1a1-a1a1-a1a1-a1a1a1a1a1a1", "selectedAnswer": "1", "rank": 0 },
+    { "questionId": "c3c3c3c3-c3c3-c3c3-c3c3-c3c3c3c3c3c3", "selectedAnswer": "4", "rank": 0 },
+    { "questionId": "d4d4d4d4-d4d4-d4d4-d4d4-d4d4d4d4d4d4", "selectedAnswer": "Kariyer Gelisimi", "rank": 1 }
+  ]
+}
+```
+
+Adim 5 - User Icin Recommendation Uret
+--------------------------------------
+Endpoint: `POST /api/recommendation/generate/{testResultId}`
+
+Beklenen:
+- 200 OK
+- `AiRecommendationDto` doner.
+- `content` alani bos olmamali.
+
+Adim 6 - User Gecmisini Dogrula
+-------------------------------
+6.1 `GET /api/test/results/user/{userId}`
+- Beklenen: 200 + submit edilen sonucun listede gorunmesi.
+
+6.2 `GET /api/recommendation/user/{userId}`
+- Beklenen: 200 + olusan recommendation kaydinin listede gorunmesi.
+
+6.3 `GET /api/recommendation/{id}`
+- Beklenen: 200 + tek recommendation detayi.
+
+Adim 7 - Yetki Negatif Testleri (User)
+--------------------------------------
+7.1 `GET /api/user` (Admin endpoint)
+- User token ile cagir.
+- Beklenen: 403 Forbidden.
+
+7.2 `DELETE /api/user/{id}` (Admin endpoint)
+- User token ile cagir.
+- Beklenen: 403 Forbidden.
+
+7.3 Token silip tekrar korumali endpoint cagir
+- Beklenen: 401 Unauthorized.
+
+User Kabul Kriterleri
+---------------------
+- Register + Login + Authorize adimlari sorunsuz.
+- User test cozup recommendation uretebiliyor.
+- User kendi sonuc ve recommendation gecmisini gorebiliyor.
+- User admin endpointlerine erisemiyor (403).

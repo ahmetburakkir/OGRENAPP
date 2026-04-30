@@ -1,0 +1,289 @@
+OgrenApp Frontend Mimari Blueprint (A-B-C Uyumlu)
+=================================================
+
+Amaç
+- Frontend mimarisini backend A-B-C (Scoring, Interpretation, AI) ve mevcut DB şemasıyla tam uyumlu kurmak.
+- Akış: Test Listesi -> Test Çözümü -> Submit (`test_results`, `test_answers`) -> Generate Recommendation (`ai_recommendations`) -> Dashboard.
+
+1) Mimari Katmanlar ve Klasör Yapısı
+====================================
+
+Stack
+- React + TypeScript + Vite
+- Tailwind + shadcn/ui
+- Zustand + TanStack Query
+- Axios + interceptors
+- react-router-dom, zod, react-hook-form
+- dnd-kit / framer-motion
+- recharts, react-markdown
+
+Klasör yapısı (feature-based)
+- `src/app`: router, providers, query client
+- `src/shared`: api client, common types, utils, ui primitives
+- `src/features/auth`
+- `src/features/testing`
+- `src/features/dashboard`
+- `src/features/profile`
+
+Detaylı öneri
+- `src/features/testing/api`: test endpoints
+- `src/features/testing/store/useTestStore.ts`
+- `src/features/testing/components/question-renderers/*`
+- `src/features/dashboard/components/*` (stepper, charts, markdown report)
+
+UI Prensibi (Clean UI)
+- shadcn kart/tab/accordion/alert bileşenleri
+- motivasyon odaklı mikrocopy ve progress göstergeleri
+- koyu/açık tema uyumlu Tailwind token sistemi
+
+2) API Client (Axios Interceptors)
+==================================
+
+`shared/api/http.ts`
+- `baseURL = VITE_API_URL`
+- timeout, JSON header, request-id header
+
+Request interceptor
+- Access token varsa `Authorization: Bearer <token>` ekle.
+- Token memory store + opsiyonel secure persistence.
+
+Response interceptor
+- 401: refresh flow (varsa) + istek tekrar dene.
+- 403: yetki uyarısı.
+- 429/5xx: normalize edilmiş kullanıcı dostu hata.
+- Tüm hataları `ApiError` modeline dönüştür.
+
+Endpoint eşleşmesi
+- `GET /api/test`
+- `GET /api/test/{id}`
+- `POST /api/test/submit`
+- `POST /api/recommendation/generate/{testResultId}`
+- `GET /api/recommendation/user/{userId}`
+- `GET /api/recommendation/{id}`
+
+3) State Yönetimi (Zustand + TanStack Query)
+=============================================
+
+Zustand: `useTestStore`
+- State:
+  - `testId`
+  - `currentQuestionIndex`
+  - `progress`
+  - `answers: { questionId, selectedAnswer, rank? }[]`
+- Actions:
+  - `startTest`, `setAnswer`, `setRankAnswers`
+  - `nextQuestion`, `prevQuestion`, `goToQuestion`
+  - `saveDraft`, `hydrateDraft`, `resetTest`
+- Submit payload, backend `SubmitTestDto` ile birebir uyumlu.
+
+TanStack Query: server state
+- Query keys:
+  - `['tests']`, `['test', testId]`
+  - `['userResults', userId]`
+  - `['recommendations', userId]`
+  - `['recommendation', id]`
+- Cache:
+  - test listesi: stale 5 dk
+  - test detayı: stale 10 dk
+  - recommendation listesi: stale 30 sn
+- Mutations:
+  - submit -> `testResultId`
+  - generate recommendation -> invalidate recommendation queries
+
+4) Dynamic Survey Engine
+========================
+
+Question renderer router
+- `scale` -> Likert 1-5
+- `single_choice` -> tek seçim kart/radio
+- `rank_order` -> sürükle-bırak sıralama
+
+Bileşen tasarımı
+- `ScaleQuestion.tsx`: 1..5 seçimi, string value gönderimi (`"1"`-`"5"`).
+- `SingleChoiceQuestion.tsx`: options JSON parse edilip tek seçim.
+- `RankOrderQuestion.tsx`: dnd-kit ile sıra; backend için `rank` alanı doldurulur.
+
+Validasyon
+- Tüm sorular cevaplanmadan submit yok.
+- rank_order için unique rank zorunlu.
+
+5) Dashboard ve Analiz Sunumu
+=============================
+
+Processing UX (generate sırasında)
+- Stepper aşamaları:
+  1. "Cevaplar kaydediliyor"
+  2. "Skorlar hesaplanıyor" (Adım A)
+  3. "Kişilik tipi belirleniyor" (Adım B)
+  4. "AI kariyer rehberi hazırlanıyor" (Adım C)
+- Her aşama için skeleton + spinner + iptal/geri butonu.
+
+Visual Data
+- MBTI eksen grafikleri: E-I, S-N, T-F, J-P bar/dual-axis.
+- RIASEC radar chart: R, I, A, S, E, C skorları.
+
+AI Report
+- `ai_recommendations.recommendation` metni `react-markdown` ile sunulur.
+- Bölümler:
+  - Önerilen roller (3-4 rol)
+  - 90 günlük gelişim planı
+  - motivasyonel yorum
+
+6) Entegrasyon Akışı (Uçtan Uca)
+================================
+
+1. Kullanıcı test listesini açar -> `GET /api/test`.
+2. Test seçer -> `GET /api/test/{id}`.
+3. Dinamik motor soruları çözdürür (`answer_type` bazlı).
+4. Submit -> `POST /api/test/submit`.
+5. Dönen `testResultId` ile generate -> `POST /api/recommendation/generate/{testResultId}`.
+6. Dashboard -> recommendation detay + grafikler + geçmiş öneriler.
+
+7) Güvenlik ve Veri Taşıma
+==========================
+
+PII ve kimlik bilgileri
+- Frontend'de gereksiz PII tutulmaz.
+- DTO dışı alanlar asla loglanmaz.
+- UUID'ler string olarak taşınır, route param ve query key'lerde canonical format kullanılır.
+
+Token güvenliği
+- XSS riskine karşı token erişimini minimize et (memory-first yaklaşım).
+- Hassas hata içeriğini UI'da maskele; teknik detayları sadece telemetry'ye gönder.
+
+İstek güvenliği
+- HTTPS zorunlu.
+- `Authorization` dışında hassas header taşınmaz.
+- Çoklu sekme yarış koşulları için submit idempotency anahtarı önerilir.
+
+8) Backend A-B-C ile Uyum Matrisi
+=================================
+
+- Adım A (Scoring): Frontend sadece cevapları doğru formatta gönderir; skor backend hesaplar.
+- Adım B (Interpretation): MBTI/RIASEC backend üretir; frontend dashboard’da görselleştirir.
+- Adım C (AI): Prompt/backend engine tarafında; frontend sadece generate tetikler ve sonucu render eder.
+
+Sonuç
+- Bu mimari; modüler, ölçeklenebilir, SaaS uyumlu ve OgrenApp mevcut backend sözleşmeleriyle doğrudan uygulanabilir bir frontend blueprint sağlar.
+
+9) Tüm Endpoint Envanteri ve Endpointler Arası Mantık
+=====================================================
+
+Mevcut endpointler (backend controller bazlı)
+
+Test
+- `GET /api/test` -> tüm testlerin özeti (`TestSummaryDto`)
+- `GET /api/test/{id}` -> test + soru detayları (`TestDto`)
+- `POST /api/test/submit` -> `test_results` + `test_answers` oluşturur, `testResultId` döner
+- `GET /api/test/results/user/{userId}` -> kullanıcının test sonuçları
+- `GET /api/test/results/{resultId}` -> tek test sonucu
+
+Recommendation
+- `GET /api/recommendation/user/{userId}` -> kullanıcının AI öneri listesi
+- `POST /api/recommendation/generate/{testResultId}` -> Adım B+C çalışır, `ai_recommendations` kaydı üretir
+- `GET /api/recommendation/{id}` -> tek öneri detayı
+
+Topic
+- `GET /api/topic` -> tüm topic listesi
+- `GET /api/topic/category/{category}` -> kategoriye göre topic listesi
+
+Question
+- `GET /api/question/test/{testId}` -> teste bağlı soru listesi
+
+User
+- `GET /api/user/{id}` -> kullanıcı detayı
+- `GET /api/user` -> kullanıcı listesi
+- `POST /api/user/register` -> kayıt
+- `POST /api/user/login` -> giriş
+- `PUT /api/user/{id}` -> profil güncelleme
+- `DELETE /api/user/{id}` -> kullanıcı silme
+
+Endpointler arası iş akışı mantığı
+- Test akışı:
+  1. `GET /api/test`
+  2. `GET /api/test/{id}`
+  3. `POST /api/test/submit`
+  4. `POST /api/recommendation/generate/{testResultId}`
+  5. `GET /api/recommendation/{id}` veya `GET /api/recommendation/user/{userId}`
+- Rapor ekranı:
+  - Sonuç metni recommendation endpointlerinden,
+  - grafik ham verisi test result + interpretation çıktılarından türetilir.
+- Topic bağı:
+  - Topic endpointleri admin/operasyon ekranlarında mapping doğrulamak için kullanılır.
+
+10) Neden Admin Panel Zorunlu (Hardcoded/SQL ile Sürdürülemez)
+==============================================================
+
+Kritik gerçek
+- Sistem verileri dinamik: testler, sorular, şıklar, topic map, ağırlıklar, ters kodlama.
+- Bu verileri sadece kod içinde hardcoded tutmak veya her değişiklikte elle SQL yazmak kısa sürede yönetilemez hale gelir.
+- En büyük risk: Scoring Engine (Adım A) yanlış mapping yüzünden hatalı skor üretir ve tüm A-B-C zinciri bozulur.
+
+Admin panelin çözmesi gereken ana problemler
+- İçerik yaşam döngüsü:
+  - ürün ekibi yeni test/soru yayınlayabilmeli.
+- Mapping güvenilirliği:
+  - `question_topics.weight` ve `is_positive` doğru yönetilmeli.
+- Operasyonel gözlemlenebilirlik:
+  - üretilen AI önerilerinin kalite kontrolü yapılmalı.
+
+11) Admin Panel Kapsamı (MVP -> V1)
+===================================
+
+11.1 Test ve Soru Yönetimi (CRUD)
+- Test oluştur/düzenle/sil:
+  - `title`, `type` (KARAKTER, ALAN_SECIMI, DEGERLER)
+- Soru oluştur/düzenle/sil:
+  - `questionText`
+  - `answerType` (`scale`, `single_choice`, `rank_order`)
+  - `options` (JSON)
+- Bulk import/export:
+  - JSON şablonu ile soru toplu içe alma
+
+11.2 Zeka Katmanı Tanımları (Mapping Admin)
+- Topic CRUD:
+  - örn: `MBTI_E`, `MBTI_I`, `RIASEC_S`, `RIASEC_A`
+- Soru-Topic ilişkilendirme:
+  - `questionId`, `topicId`, `weight`, `is_positive`
+- Mapping editörü:
+  - aynı soruya çoklu topic bağlama
+  - canlı doğrulama (boş topic, sıfır ağırlık, çakışma kontrolü)
+
+11.3 Kullanıcı ve Sonuç İzleme
+- Kullanıcı listesi + temel filtreler
+- Test sonuç izleme:
+  - `test_results` ve skor trendleri
+- AI öneri denetimi:
+  - `ai_recommendations` içeriği, tarih, kaynak test
+  - kalite etiketi (manual review alanı)
+
+12) Admin Frontend Yol Haritası
+===============================
+
+Kısa vadeli (hızlı ayağa kaldırma)
+- `/admin` altında basit CRUD tabloları
+- shadcn `DataTable + Dialog + Form` kombinasyonu
+- sadece admin kullanıcıya açık route guard
+
+Orta vadeli
+- dashboard template ile gelişmiş yönetim paneli
+- filtre/sıralama, audit trail, soft-delete
+- mapping versiyonlama ve rollback
+
+Uzun vadeli
+- role-based access (Admin, Editor, Analyst)
+- içerik onay akışı (draft -> publish)
+- prompt versiyonlama ve A/B test
+
+13) Kritik Operasyon Tavsiyesi
+==============================
+
+- Swagger'da hataların önemli bir kısmı, DB'de gerekli temel verilerin eksik olmasından çıkar.
+- Admin panel tamamlanana kadar geçici güvenli çözüm:
+  - `OnModelCreating` içinde minimum test/topic/mapping seed seti tut.
+  - gerektiğinde tek komutla çalışan seed script (idempotent) kullan.
+
+Karar önerisi
+- Önce backend role-based access ve admin endpointlerini netleştir.
+- Paralelde seed script ile temel veriyi garanti altına al.
+- Sonra admin frontend CRUD ekranlarını devreye al.

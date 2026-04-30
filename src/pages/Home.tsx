@@ -10,7 +10,7 @@ const carouselSlides = [
   {
     id: 1,
     title: "Geleceğini OGRENAPP ile Şekillendir",
-    subtitle: "Ortaokuldan Üniversiteye Kariyer Koçun",
+    subtitle: "Lise ve Kariyer Yolculuğunda Rehberin",
     description: "Sadece ders çalışmak değil, potansiyelini keşfetmek için buradayız. Hedeflerini belirle, görevleri tamamla ve XP kazanarak seviye atla.",
     icon: Rocket,
     color: "from-indigo-500 to-purple-500"
@@ -18,8 +18,8 @@ const carouselSlides = [
   {
     id: 2,
     title: "Sana Özel Gerçek Dünya Simülasyonları",
-    subtitle: "Lise ve Üniversite Hedeflerin İçin",
-    description: "YKS Net simülatörü, Mülakat provaları, Soft Skill takibi ve sektör trendleri ile sadece sınava değil, hayata hazırlan.",
+    subtitle: "Lise ve Kariyer Hedeflerin İçin",
+    description: "YKS Net simülatörü, Kariyer provaları, Soft Skill takibi ve sektör trendleri ile sadece sınava değil, hayata hazırlan.",
     icon: Target,
     color: "from-fuchsia-500 to-rose-500"
   },

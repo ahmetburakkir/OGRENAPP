@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { GraduationCap, Code2, BookOpen, Rocket, Star, Target, Sparkles, ChevronRight } from 'lucide-react';
+import { GraduationCap, Rocket, Star, Target, Sparkles, ChevronRight } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -205,33 +205,17 @@ const Welcome: React.FC = () => {
             <div className="h-px bg-slate-300 dark:bg-white/10 flex-1" />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 min-h-[400px]">
-            <FloatingPortalCard
-              title="Üniversite Modülü"
-              description="Dijital CV'ni oluştur, sektör trendlerini yakala ve teknik mülakatlara hazırlan."
-              icon={<Code2 />}
-              to="/dashboard/universite"
-              colorScheme="blue"
-              delay={0.1}
-            />
-            
-            <FloatingPortalCard
-              title="Lise Modülü"
-              description="Karakterini analiz et, netlerini yükselt ve alternatif kariyer yollarını incele."
-              icon={<GraduationCap />}
-              to="/dashboard/lise"
-              colorScheme="purple"
-              delay={0.2}
-            />
-            
-            <FloatingPortalCard
-              title="Ortaokul Modülü"
-              description="Sosyal becerilerini takip et, liseye geçişteki rotanı şimdiden belirle. Görevleri tamamla, XP kazan!"
-              icon={<BookOpen />}
-              to="/dashboard/ortaokul"
-              colorScheme="emerald"
-              delay={0.3}
-            />
+          <div className="flex justify-center min-h-[400px]">
+            <div className="max-w-sm w-full">
+              <FloatingPortalCard
+                title="Lise Modülü"
+                description="Karakterini analiz et, netlerini yükselt ve alternatif kariyer yollarını incele. Geleceğine yön ver!"
+                icon={<GraduationCap />}
+                to="/dashboard/lise"
+                colorScheme="purple"
+                delay={0.1}
+              />
+            </div>
           </div>
         </div>
 

@@ -1,14 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Map, BrainCircuit, Compass, Check, X, Fingerprint, BarChart2, MessageCircle, Route, GraduationCap, Award, Building2, DollarSign, TrendingUp } from 'lucide-react';
+import { Map, BrainCircuit, Compass, Check, X, Fingerprint, MessageCircle, Route, GraduationCap, Award, Building2, DollarSign, TrendingUp } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+import { useAuth } from '../../context/AuthContext';
+import { getRecommendationsByUser } from '../../shared/api/client';
 
 const mockDepartments = [
   { id: 1, name: 'Yapay Zeka Mühendisliği', uni: 'Teknik Üniversiteler', match: 94, desc: 'Matematik ve algoritmaya yatkınlığın bu bölüm için mükemmel.', tags: ['Matematik', 'Yazılım', 'Analitik'] },
@@ -47,11 +43,29 @@ const mockComparisonData = {
 
 const LiseDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { token, userId } = useAuth();
   const [cards, setCards] = useState(mockDepartments);
+  const [latestRecommendation, setLatestRecommendation] = useState<string | null>(null);
 
   const handleSwipe = (id: number, _action: 'like' | 'pass') => {
     setCards(prev => prev.filter(c => c.id !== id));
   };
+
+  useEffect(() => {
+    const loadLatestRecommendation = async () => {
+      if (!token || !userId) return;
+      try {
+        const recommendations = await getRecommendationsByUser(userId, token);
+        if (recommendations.length > 0) {
+          setLatestRecommendation(recommendations[0].recommendation);
+        }
+      } catch {
+        setLatestRecommendation(null);
+      }
+    };
+
+    void loadLatestRecommendation();
+  }, [token, userId]);
 
   return (
     <div className="min-h-screen p-6 sm:p-10 w-full max-w-7xl mx-auto flex flex-col gap-8 pb-32 sm:pb-10 transition-colors duration-700">
@@ -116,9 +130,13 @@ const LiseDashboard: React.FC = () => {
           </div>
           
           <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-2xl relative z-10 shadow-sm">
-            <h4 className="text-sm font-bold text-slate-800 dark:text-white mb-1">Henüz Veri Yok</h4>
+            <h4 className="text-sm font-bold text-slate-800 dark:text-white mb-1">
+              {latestRecommendation ? 'Son AI Önerin' : 'Henüz Veri Yok'}
+            </h4>
             <p className="text-xs text-slate-600 dark:text-purple-200 leading-relaxed">
-              Kişilik testini çözerek baskın yönlerini ve sana uygun meslekleri keşfet.
+              {latestRecommendation
+                ? latestRecommendation
+                : 'Kişilik testini çözerek baskın yönlerini ve sana uygun meslekleri keşfet.'}
             </p>
           </div>
         </motion.div>

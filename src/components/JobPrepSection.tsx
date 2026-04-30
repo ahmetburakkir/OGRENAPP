@@ -68,13 +68,13 @@ export const JobPrepSection: React.FC = () => {
                Mülakat senaryolarıyla yetkinliklerini ölçmeye hazır mısın? 12 soruluk mini testi çöz, kendini analiz et.
              </p>
              <button 
-               onClick={() => navigate('/dashboard/universite/job-test')}
+               onClick={() => navigate('/dashboard/job-test')}
                className="w-full py-4 bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white rounded-2xl font-black text-lg shadow-lg hover:shadow-fuchsia-500/30 hover:scale-105 transition-all mb-3"
              >
                Testi Çöz &amp; Analiz Et
              </button>
              <button 
-               onClick={() => navigate('/dashboard/universite/job-test')}
+               onClick={() => navigate('/dashboard/job-test')}
                className="w-full py-3 bg-white/50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-700 text-fuchsia-600 dark:text-fuchsia-400 border border-fuchsia-500/20 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 relative overflow-hidden group"
              >
                <BarChart3 className="w-5 h-5 group-hover:scale-110 transition-transform" /> Ayrıntılar ve Analizi Gör

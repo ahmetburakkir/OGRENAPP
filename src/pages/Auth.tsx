@@ -3,9 +3,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, Mail, User, ArrowRight, Github, Chrome, Zap } from 'lucide-react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { loginUser, registerUser } from '../shared/api/client';
+import { ApiError } from '../shared/api/http';
 
 const Auth: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { login, isAuthenticated } = useAuth();
 
@@ -16,12 +24,41 @@ const Auth: React.FC = () => {
 
   const toggleAuthMode = () => {
     setIsLogin((prev) => !prev);
+    setError(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    login(); // Setup local context auth
-    navigate('/welcome');
+    setLoading(true);
+    setError(null);
+
+    try {
+      if (!isLogin) {
+        const [firstName, ...rest] = fullName.trim().split(' ');
+        const lastName = rest.join(' ') || '-';
+        await registerUser({
+          firstName: firstName || 'Kullanici',
+          lastName,
+          username,
+          email,
+          password,
+        });
+      }
+
+      const auth = await loginUser({ username, password });
+      login({
+        token: auth.token,
+        userId: auth.userId,
+        role: auth.role,
+      });
+      navigate('/welcome');
+    } catch (err) {
+      const message =
+        err instanceof ApiError ? err.message : 'İşlem tamamlanamadı. Lütfen tekrar dene.';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -71,6 +108,8 @@ const Auth: React.FC = () => {
                       type="text" 
                       placeholder="Ad Soyad"
                       required
+                      value={fullName}
+                      onChange={(event) => setFullName(event.target.value)}
                       className="w-full bg-white/60 dark:bg-black/20 border border-slate-300 dark:border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-slate-800 dark:text-white placeholder:text-slate-500 font-medium focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-white/5 transition-all shadow-sm"
                     />
                   </div>
@@ -80,12 +119,28 @@ const Auth: React.FC = () => {
               <div className="relative group">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-indigo-500 dark:group-focus-within:text-indigo-400 transition-colors" />
                 <input 
-                  type="email" 
-                  placeholder="E-posta adresi"
+                  type="text"
+                  placeholder={isLogin ? 'Kullanıcı adı' : 'Kullanıcı adı (login için)'}
                   required
+                  value={username}
+                  onChange={(event) => setUsername(event.target.value)}
                   className="w-full bg-white/60 dark:bg-black/20 border border-slate-300 dark:border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-slate-800 dark:text-white placeholder:text-slate-500 font-medium focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-white/5 transition-all shadow-sm"
                 />
               </div>
+
+              {!isLogin && (
+                <div className="relative group">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-indigo-500 dark:group-focus-within:text-indigo-400 transition-colors" />
+                  <input
+                    type="email"
+                    placeholder="E-posta adresi"
+                    required
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    className="w-full bg-white/60 dark:bg-black/20 border border-slate-300 dark:border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-slate-800 dark:text-white placeholder:text-slate-500 font-medium focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-white/5 transition-all shadow-sm"
+                  />
+                </div>
+              )}
 
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-indigo-500 dark:group-focus-within:text-indigo-400 transition-colors" />
@@ -93,9 +148,15 @@ const Auth: React.FC = () => {
                   type="password" 
                   placeholder="Şifre"
                   required
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
                   className="w-full bg-white/60 dark:bg-black/20 border border-slate-300 dark:border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-slate-800 dark:text-white placeholder:text-slate-500 font-medium focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-white/5 transition-all shadow-sm"
                 />
               </div>
+
+              {error && (
+                <p className="text-sm font-semibold text-rose-600 dark:text-rose-400">{error}</p>
+              )}
 
               {isLogin && (
                 <div className="flex justify-end">
@@ -105,9 +166,10 @@ const Auth: React.FC = () => {
 
               <button 
                 type="submit"
+                disabled={loading}
                 className="w-full py-4 mt-2 bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-500 dark:to-purple-500 hover:from-indigo-500 hover:to-purple-500 dark:hover:from-indigo-400 dark:hover:to-purple-400 text-white font-bold rounded-2xl shadow-lg shadow-indigo-500/25 transition-all flex items-center justify-center gap-2 group"
               >
-                {isLogin ? 'Giriş Yap' : 'Kayıt Ol'}
+                {loading ? 'İşleniyor...' : isLogin ? 'Giriş Yap' : 'Kayıt Ol'}
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
             </form>
@@ -131,24 +193,12 @@ const Auth: React.FC = () => {
             {/* Quick Login - Temporary for Test/Demo */}
             <div className="mt-6 flex flex-col gap-2 relative z-10">
               <p className="text-[10px] text-center font-bold text-slate-400 uppercase tracking-widest mb-1">Hızlı Giriş (Demo)</p>
-              <div className="flex gap-2">
+              <div className="flex justify-center">
                 <button 
-                  onClick={() => { login(); navigate('/dashboard/ortaokul'); }}
-                  className="flex-1 py-2 px-1 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-xl text-[10px] font-black text-emerald-600 dark:text-emerald-400 transition-all flex items-center justify-center gap-1"
+                  onClick={() => navigate('/login')}
+                  className="w-full py-3 px-4 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 rounded-xl text-xs font-black text-indigo-600 dark:text-indigo-400 transition-all flex items-center justify-center gap-2"
                 >
-                  <Zap className="w-3 h-3" /> Ortaokul
-                </button>
-                <button 
-                  onClick={() => { login(); navigate('/dashboard/lise'); }}
-                  className="flex-1 py-2 px-1 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 rounded-xl text-[10px] font-black text-indigo-600 dark:text-indigo-400 transition-all flex items-center justify-center gap-1"
-                >
-                  <Zap className="w-3 h-3" /> Lise
-                </button>
-                <button 
-                  onClick={() => { login(); navigate('/dashboard/universite'); }}
-                  className="flex-1 py-2 px-1 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 rounded-xl text-[10px] font-black text-blue-600 dark:text-blue-400 transition-all flex items-center justify-center gap-1"
-                >
-                  <Zap className="w-3 h-3" /> Üniversite
+                  <Zap className="w-4 h-4" /> API ile Giriş Yap
                 </button>
               </div>
             </div>
