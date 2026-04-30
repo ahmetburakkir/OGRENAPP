@@ -2,19 +2,16 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Briefcase, BarChart3 } from 'lucide-react';
-import { jobPrepQuestions } from '../data/jobPrepQuestions';
+const MOCK_SKILLS = [
+  { id: '1', competency: 'Liderlik ve İnisiyatif', score: 75 },
+  { id: '2', competency: 'Problem Çözme', score: 82 },
+  { id: '3', competency: 'İletişim ve Takım Çalışması', score: 68 },
+  { id: '4', competency: 'Analitik Düşünme', score: 90 },
+  { id: '5', competency: 'Kriz Yönetimi', score: 60 }
+];
 
 export const JobPrepSection: React.FC = () => {
   const navigate = useNavigate();
-
-  // Generate random initial percentages for the radar/list
-  const [competencyScores] = useState<Record<string, number>>(() => {
-    const scores: Record<string, number> = {};
-    jobPrepQuestions.forEach(q => {
-       scores[q.id] = Math.floor(Math.random() * 40) + 40; // Random score between 40-80
-    });
-    return scores;
-  });
 
   return (
     <div className="w-full mt-4">
@@ -39,16 +36,16 @@ export const JobPrepSection: React.FC = () => {
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-              {jobPrepQuestions.map((item) => (
+              {MOCK_SKILLS.map((item) => (
                 <div key={item.id} className="flex flex-col gap-1.5">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{item.competency}</span>
-                    <span className="text-xs font-black text-slate-500">% {competencyScores[item.id]}</span>
+                    <span className="text-xs font-black text-slate-500">% {item.score}</span>
                   </div>
                   <div className="w-full h-2 bg-slate-200 dark:bg-black/40 rounded-full overflow-hidden border border-white/20 dark:border-white/5">
                     <motion.div 
                       initial={{ width: 0 }}
-                      whileInView={{ width: `${competencyScores[item.id]}%` }}
+                      whileInView={{ width: `${item.score}%` }}
                       viewport={{ once: true }}
                       transition={{ duration: 1.5, ease: "easeOut" }}
                       className="h-full rounded-full bg-gradient-to-r from-blue-400 to-fuchsia-500 relative"

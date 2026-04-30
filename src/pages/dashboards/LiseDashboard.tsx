@@ -57,7 +57,7 @@ const LiseDashboard: React.FC = () => {
       try {
         const recommendations = await getRecommendationsByUser(userId, token);
         if (recommendations.length > 0) {
-          setLatestRecommendation(recommendations[0].recommendation);
+          setLatestRecommendation(recommendations[0].content || null);
         }
       } catch {
         setLatestRecommendation(null);

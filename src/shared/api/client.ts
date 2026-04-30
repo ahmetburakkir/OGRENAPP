@@ -14,36 +14,56 @@ export interface RegisterPayload {
   password: string;
 }
 
-interface TestSummaryDto {
+export interface TestSummaryDto {
   id: string;
+  title?: string;
+  type?: string;
+  questionCount?: number;
 }
 
-interface QuestionDto {
+export interface QuestionDto {
   id: string;
-  questionText: string;
-  answerType: 'scale' | 'single_choice' | 'rank_order';
-  options?: string | string[];
+  content?: string;
+  answerType?: string;
+  order?: number;
+  options?: Record<string, string>;
+  topicNames?: string[];
 }
 
-interface TestDto {
+export interface TestDto {
   id: string;
-  questions: QuestionDto[];
+  title?: string;
+  type?: string;
+  description?: string;
+  questions?: QuestionDto[];
 }
 
-interface SubmitAnswerDto {
+export interface SubmitAnswerDto {
   questionId: string;
-  selectedAnswer: string;
-  rank: number;
+  selectedAnswer?: string;
+  rank?: number;
 }
 
-interface SubmitResponseDto {
+export interface SubmitResponseDto {
   testResultId: string;
+  message?: string;
 }
 
 export interface AiRecommendationDto {
   id: string;
-  recommendation: string;
+  content?: string;
+  testTitle?: string;
+  testType?: string;
   createdAt?: string;
+}
+
+export interface TestResultDto {
+  id: string;
+  testId: string;
+  testTitle?: string;
+  testType?: string;
+  score?: number;
+  completedAt?: string;
 }
 
 export async function loginUser(payload: { username: string; password: string }) {
@@ -85,5 +105,9 @@ export async function generateRecommendation(testResultId: string, token: string
 
 export async function getRecommendationsByUser(userId: string, token: string) {
   return httpRequest<AiRecommendationDto[]>(`/api/recommendation/user/${userId}`, { token });
+}
+
+export async function getUserResults(userId: string, token: string) {
+  return httpRequest<TestResultDto[]>(`/api/test/results/user/${userId}`, { token });
 }
 
