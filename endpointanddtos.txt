@@ -1,0 +1,220 @@
+Question
+
+
+GET
+/api/Question/test/{testId}
+
+
+Recommendation
+
+
+GET
+/api/Recommendation/user/{userId}
+
+
+
+POST
+/api/Recommendation/generate/{testResultId}
+
+
+
+GET
+/api/Recommendation/{id}
+
+
+Test
+
+
+GET
+/api/Test
+
+
+
+GET
+/api/Test/{id}
+
+
+
+POST
+/api/Test/submit
+
+
+
+GET
+/api/Test/results/user/{userId}
+
+
+
+GET
+/api/Test/results/{resultId}
+
+
+Topic
+
+
+GET
+/api/Topic
+
+
+User
+
+
+POST
+/api/User/register
+
+
+
+POST
+/api/User/login
+
+
+
+GET
+/api/User
+
+
+
+GET
+/api/User/{id}
+
+
+
+PATCH
+/api/User/{id}
+
+
+
+DELETE
+/api/User/{id}
+
+
+
+
+
+AiRecommendationDto{
+id	string($uuid)
+content	string
+nullable: true
+testTitle	string
+nullable: true
+testType	string
+nullable: true
+createdAt	string($date-time)
+}
+QuestionDto{
+id	string($uuid)
+content	string
+nullable: true
+answerType	string
+nullable: true
+order	integer($int32)
+options	{
+}
+nullable: true
+topicNames	[
+nullable: true
+string]
+}
+SubmitTestDto{
+userId	string($uuid)
+testId	string($uuid)
+answers	[
+nullable: true
+UserAnswerDto{
+questionId	string($uuid)
+selectedAnswer	string
+nullable: true
+rank	integer($int32)
+nullable: true
+}]
+}
+SubmitTestResultDto{
+testResultId	string($uuid)
+message	string
+nullable: true
+}
+TestDto{
+id	string($uuid)
+title	string
+nullable: true
+type	string
+nullable: true
+description	string
+nullable: true
+questions	[
+nullable: true
+QuestionDto{
+id	string($uuid)
+content	string
+nullable: true
+answerType	string
+nullable: true
+order	integer($int32)
+options	{
+}
+nullable: true
+topicNames	[
+nullable: true
+string]
+}]
+}
+TestResultDto{
+id	string($uuid)
+testId	string($uuid)
+testTitle	string
+nullable: true
+testType	string
+nullable: true
+score	integer($int32)
+completedAt	string($date-time)
+}
+TestSummaryDto{
+id	string($uuid)
+title	string
+nullable: true
+type	string
+nullable: true
+questionCount	integer($int32)
+}
+TopicDto{
+id	string($uuid)
+name	string
+nullable: true
+category	string
+nullable: true
+}
+UserAnswerDto{
+questionId	string($uuid)
+selectedAnswer	string
+nullable: true
+rank	integer($int32)
+nullable: true
+}
+UserLoginDto{
+username	string
+nullable: true
+password	string
+nullable: true
+}
+UserRegisterDto{
+firstName	string
+nullable: true
+lastName	string
+nullable: true
+username	string
+nullable: true
+email	string
+nullable: true
+password	string
+nullable: true
+}
+UserUpdateDto{
+name	string
+nullable: true
+username	string
+nullable: true
+email	string
+nullable: true
+passwordHash	string
+nullable: true
+}
