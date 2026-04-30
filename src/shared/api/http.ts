@@ -1,45 +1,43 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5108';
+import axios from "axios";
 
-export class ApiError extends Error {
-  status: number;
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5108";
 
-  constructor(message: string, status: number) {
-    super(message);
-    this.name = 'ApiError';
-    this.status = status;
-  }
-}
+export const http = axios.create({
+  baseURL: API_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
-interface RequestOptions extends RequestInit {
-  token?: string | null;
-}
-
-export async function httpRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { token, headers, ...rest } = options;
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-
-  const response = await fetch(`${API_BASE_URL}${normalizedPath}`, {
-    ...rest,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...headers,
-    },
-  });
-
-  if (!response.ok) {
-    let message = 'Beklenmeyen bir hata oluştu.';
-    try {
-      const errorBody = (await response.json()) as { message?: string };
-      if (errorBody?.message) {
-        message = errorBody.message;
-      }
-    } catch {
-      // Ignore parsing errors and keep fallback message.
+http.interceptors.request.use(
+  (config) => {
+    // We will retrieve the token from zustand or localStorage
+    const token = localStorage.getItem("ogrenapp_token");
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
-    throw new ApiError(message, response.status);
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
+);
 
-  return (await response.json()) as T;
-}
-
+http.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    if (error.response?.status === 401) {
+      // Handle unauthorized
+      console.error("Unauthorized! Redirecting to login...");
+      localStorage.removeItem("ogrenapp_token");
+      // Optionally dispatch an event or redirect
+      window.location.href = "/auth";
+    }
+    if (error.response?.status === 403) {
+      console.error("Forbidden!");
+    }
+    return Promise.reject(error);
+  }
+);
