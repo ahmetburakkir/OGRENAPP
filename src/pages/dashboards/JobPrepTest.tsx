@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Briefcase, ArrowLeft, CheckCircle2, ArrowRight, RotateCcw, Target, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { getTests, getTestById, submitTest, generateRecommendation, TestDto, SubmitAnswerDto, AiRecommendationDto } from '../../shared/api/client';
+import { getTests, getTestById, submitTest, generateRecommendation, type TestDto, type SubmitAnswerDto, type AiRecommendationDto } from '../../shared/api/client';
 
 const JobPrepTest: React.FC = () => {
   const navigate = useNavigate();
@@ -53,7 +53,7 @@ const JobPrepTest: React.FC = () => {
       ...prev,
       {
         questionId: testData.questions![currentQIndex].id,
-        selectedAnswer,
+        selectedAnswer: selectedAnswer ?? undefined,
         rank: 1
       }
     ]);
@@ -76,8 +76,7 @@ const JobPrepTest: React.FC = () => {
         const submitResponse = await submitTest({
           userId,
           testId: testData.id,
-          answers: [...userAnswers, { questionId: testData.questions[currentQIndex].id, selectedAnswer, rank: 1 }] // Current one wasn't added if state wasn't updated, but wait, submitAnswer adds it. Let's make sure it's in the state. 
-          // Wait, userAnswers state is updated asynchronously. It's safer to use the combined array.
+          answers: [...userAnswers, { questionId: testData.questions[currentQIndex].id, selectedAnswer: selectedAnswer ?? undefined, rank: 1 }] 
         }, token);
 
         const recommendation = await generateRecommendation(submitResponse.testResultId, token);

@@ -12,8 +12,8 @@ interface QuestionOption {
 
 interface QuestionModel {
   id: string;
-  questionText: string;
-  answerType: 'scale' | 'single_choice' | 'rank_order';
+  questionText: string | undefined;
+  answerType: string | undefined;
   options: QuestionOption[];
 }
 
@@ -30,29 +30,9 @@ const KarakterTesti: React.FC = () => {
   const [recommendation, setRecommendation] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
-  const parseOptions = (value: string | string[] | undefined): QuestionOption[] => {
-    if (!value) {
-      return [];
-    }
-
-    if (Array.isArray(value)) {
-      return value.map((option) => ({ label: String(option) }));
-    }
-
-    try {
-      const parsed = JSON.parse(value);
-      if (Array.isArray(parsed)) {
-        return parsed.map((option) => ({ label: String(option?.text ?? option) }));
-      }
-    } catch {
-      // Fallback for comma separated options
-    }
-
-    return value
-      .split(',')
-      .map((option) => option.trim())
-      .filter(Boolean)
-      .map((option) => ({ label: option }));
+  const parseOptions = (value: Record<string, string> | undefined): QuestionOption[] => {
+    if (!value) return [];
+    return Object.values(value).map(v => ({ label: v }));
   };
 
   useEffect(() => {
@@ -73,9 +53,9 @@ const KarakterTesti: React.FC = () => {
 
         const selectedTestId = tests[0].id;
         const detail = await getTestById(selectedTestId, token);
-        const preparedQuestions = detail.questions.map((item) => ({
+        const preparedQuestions = (detail.questions || []).map((item) => ({
           id: item.id,
-          questionText: item.questionText,
+          questionText: item.content,
           answerType: item.answerType,
           options:
             item.answerType === 'scale'
@@ -138,7 +118,7 @@ const KarakterTesti: React.FC = () => {
       );
 
       const recommendationResult = await generateRecommendation(submitResult.testResultId, token);
-      setRecommendation(recommendationResult.recommendation);
+      setRecommendation(recommendationResult.content || null);
     } catch (err) {
       const message = err instanceof ApiError ? err.message : 'Sonuçlar backend\'e kaydedilemedi.';
       setError(message);
